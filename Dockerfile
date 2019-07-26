@@ -37,7 +37,7 @@ RUN export BUILD_DEPS="git \
 	&& certbot --version
 
 # :: Version
-RUN echo "radicale version: app.version{{$(certbot --version)}}"
+RUN echo "certbot version: app.version{{$(certbot --version)}}"
 
 # ------ VOLUMES ------ #
 VOLUME ["/var/ssl"]
