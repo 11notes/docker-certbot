@@ -1,9 +1,10 @@
-# ------ HEADER ------ #
-FROM 11notes/nginx:latest
+# :: Header
+FROM 11notes/nginx:stable
 ARG DEBIAN_FRONTEND=noninteractive
 
-# ------ RUN  ------ #
-ADD ./source/certbot.conf /var/nginx/conf.d/certbot.conf
+# :: Run
+USER root
+ADD ./source/certbot.conf /nginx/etc/default.conf
 ADD ./source/certbot.sh /usr/local/bin/certbot-run
 RUN chmod +x /usr/local/bin/certbot-run
 
@@ -33,15 +34,18 @@ RUN export BUILD_DEPS="git \
         -e /opt/certbot/src/certbot-apache \
         -e /opt/certbot/src/certbot-nginx \ 
     && apk del ${BUILD_DEPS} \
-    && rm -rf /var/cache/apk/* \
-	&& certbot --version
+    && rm -rf /var/cache/apk/*
 
 # :: Version
-RUN echo "certbot version: app.version{{$(certbot --version)}}"
+RUN echo "CI/CD{{$(certbot --version)}}"
 
-# ------ VOLUMES ------ #
-VOLUME ["/var/ssl"]
+# :: docker -u 1000:1000 (no root initiative)
+RUN chown -R nginx:nginx /opt/certbot \
+    && chown -R nginx:nginx /nginx
 
-# ------ CMD/START/STOP ------ #
-STOPSIGNAL SIGTERM
+# :: Volumes
+VOLUME ["/nginx/ssl"]
+
+# :: Start
+USER nginx
 CMD ["nginx", "-g", "daemon off;"]
