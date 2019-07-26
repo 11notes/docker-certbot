@@ -37,7 +37,7 @@ RUN export BUILD_DEPS="git \
     && rm -rf /var/cache/apk/*
 
 # :: Version
-RUN echo "CI/CD{{$(certbot --version)}}"
+RUN echo "CI/CD{{$(certbot --version 2>&1)}}"
 
 # :: docker -u 1000:1000 (no root initiative)
 RUN chown -R nginx:nginx /opt/certbot \
