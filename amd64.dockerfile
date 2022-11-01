@@ -26,3 +26,8 @@
 
 # :: Volumes
 	VOLUME ["/certbot/etc", "/certbot/var"]
+
+# :: Start
+	RUN set -ex; chmod +x /usr/local/bin/entrypoint.sh
+	USER nginx
+	ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
