@@ -1,0 +1,20 @@
+#!/bin/ash
+i=0
+while read NAME; do
+  j=0
+  domains=''
+  email=$(yq '.certificates['${i}'].email' config.yaml)
+  while read fqdn; do
+    domain=$(yq '.certificates['${i}'].fqdn['${j}']' config.yaml)
+    domains="${domains} -d ${domain}"
+    j=$((${j}+1))
+  done < <(yq '.certificates['${i}'].fqdn' config.yaml)
+  
+  certbot certonly --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
+  dir=/certbot/var/${NAME}
+  mkdir -p ${dir}
+  cp /etc/letsencrypt/live/${NAME} -RL ${dir}
+  openssl pkcs12 -export -out "${dir}/cert.pfx" -inkey "${dir}/privkey.pem" -in "${dir}/cert.pem" -certfile "${dir}/fullchain.pem" -passout pass:certbot
+
+  i=$((${i}+1))
+done < <(yq '.certificates[].name' config.yaml)

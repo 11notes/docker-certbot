@@ -1,0 +1,6 @@
+certificates:
+  - name: "com.domain"
+    email: "info@domain.com"
+    fqdn:
+      - domain.com
+      - www.domain.com
