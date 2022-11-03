@@ -9,7 +9,8 @@
             mkdir -p /certbot; \
             mkdir -p /certbot/etc; \
             mkdir -p /certbot/var; \
-            mkdir -p /var/log/letsencrypt;
+            mkdir -p /certbot/lib; \
+            mkdir -p /certbot/log;
 
 		RUN set -ex; \
             apk --update --no-cache add \
@@ -25,8 +26,7 @@
     # :: docker -u 1000:1000 (no root initiative)
         RUN set -ex; \
             chown -R nginx:nginx \
-				/certbot \
-                /var/log/letsencrypt;
+				/certbot;
 
 # :: Volumes
 	VOLUME ["/certbot/etc", "/certbot/var"]
