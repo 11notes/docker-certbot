@@ -4,3 +4,8 @@ certificates:
     fqdn:
       - domain.com
       - www.domain.com
+  - name: "com.contoso"
+    email: "info@contoso.com"
+    fqdn:
+      - contoso.com
+      - www.contoso.com
