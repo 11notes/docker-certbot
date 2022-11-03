@@ -8,7 +8,8 @@
         RUN set -ex; \
             mkdir -p /certbot; \
             mkdir -p /certbot/etc; \
-            mkdir -p /certbot/var;
+            mkdir -p /certbot/var; \
+            mkdir -p /var/log/letsencrypt;
 
 		RUN set -ex; \
             apk --update --no-cache add \
