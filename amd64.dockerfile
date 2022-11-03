@@ -8,8 +8,7 @@
         RUN set -ex; \
             mkdir -p /certbot; \
             mkdir -p /certbot/etc; \
-            mkdir -p /certbot/crt; \
-            ln -sf /certbot/var /etc/letsencrypt;
+            mkdir -p /certbot/var;
 
 		RUN set -ex; \
             apk --update --no-cache add \
@@ -25,10 +24,11 @@
     # :: docker -u 1000:1000 (no root initiative)
         RUN set -ex; \
             chown -R nginx:nginx \
-				/certbot
+				/certbot \
+                /var/log/letsencrypt;
 
 # :: Volumes
-	VOLUME ["/certbot/etc", "/certbot/var", "/certbot/crt"]
+	VOLUME ["/certbot/etc", "/certbot/var"]
 
 # :: Start
 	RUN set -ex; chmod +x /usr/local/bin/entrypoint.sh

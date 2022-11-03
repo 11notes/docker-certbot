@@ -11,10 +11,10 @@ while read NAME; do
     j=$((${j}+1))
   done < <(yq '.certificates['${i}'].fqdn' ${config})
   
-  root="/certbot/var/live/${NAME}"
-  certbot certonly --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
+  root="/certbot/etc/live/${NAME}"
+  certbot certonly --config-dir /certbot/etc --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
   openssl pkcs12 -export -keypbe NONE -certpbe NONE -out "${root}/cert.pfx" -inkey "${root}/privkey.pem" -in "${root}/cert.pem" -certfile "${root}/fullchain.pem" -passout pass:
-  cp ${root} /certbot/crt
+  cp ${root} /certbot/var
 
   i=$((${i}+1))
 done < <(yq '.certificates[].name' ${config})
