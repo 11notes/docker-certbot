@@ -8,4 +8,3 @@ certificates:
     email: "info@contoso.com"
     fqdn:
       - contoso.com
-      - www.contoso.com
