@@ -1,8 +1,8 @@
 #!/bin/ash
-if [ -z "$1" ]; then
+  if [ -z "$1" ]; then
     set -- "nginx" \
-        -g \
-        'daemon off;'
-fi
+      -g \
+      'daemon off;'
+  fi
 
-exec "$@"
+  exec "$@"
