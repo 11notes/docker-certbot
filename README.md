@@ -27,7 +27,12 @@ certificates:
     - contoso.com
 ```
 
-This will create all kinds of certificates (key, crt, fullchain, pfx) in the directory "/certbot/var". The generated *.pfx has no password! You can then mount the same docker volume (/certbot/var) in another container to use the generated certificates (i.e. nginx webserver).
+## create or update certificates
+```shell
+docker exec certbot crt
+```
+
+This will create all kinds of certificates (key, crt, fullchain, pfx, pk8) in the directory "/certbot/var". The generated *.pfx has no password! You can then mount the same docker volume (/certbot/var) in another container to use the generated certificates (i.e. nginx webserver).
 
 ## Docker -u 1000:1000 (no root initiative)
 As part to make containers more secure, this container will not run as root, but as uid:gid 1000:1000. Therefore the default TCP port 80 was changed to 8080 (/source/certbot.conf).
