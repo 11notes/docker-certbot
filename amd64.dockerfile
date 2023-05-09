@@ -21,7 +21,7 @@
   # :: copy root filesystem changes
   COPY ./rootfs /
   RUN set -ex; \
-    chmod +x /usr/local/bin/renew;
+    chmod +x -R /usr/local/bin;
 
   # :: docker -u 1000:1000 (no root initiative)
   RUN set -ex; \
@@ -32,6 +32,5 @@
   VOLUME ["/certbot/etc", "/certbot/var"]
 
 # :: Start
-  RUN set -ex; chmod +x /usr/local/bin/entrypoint.sh
   USER nginx
   ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
