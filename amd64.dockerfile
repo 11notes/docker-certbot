@@ -16,7 +16,8 @@
     apk --update --no-cache add \
       yq \
       openssl \
-      certbot;
+      certbot; \
+    apk upgrade;
 
   # :: copy root filesystem changes
   COPY ./rootfs /
