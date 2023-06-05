@@ -1,17 +1,24 @@
-# docker-certbot
-Container that redirects all HTTP traffic to HTTPS and will create lets encrypt certificates to be exported and read from other containers or systems.
+# Alpine :: Certbot
+Run LetsEncrypt Certbot based on Alpine Linux. Small, lightweight, secure and fast.
 
 ## Volumes
-* **/certbot/etc** - config.yaml location
-* **/certbot/var** - output directory of all certs
+* **/certbot/etc** - Directory of config.yaml
+* **/certbot/var** - Directory of all certs
 
 ## Run
 ```shell
 docker run --name certbot \
-  -v /local/etc:/certbot/etc \
-  -v /local/var:/certbot/var \
+  -v ../etc:/certbot/etc \
+  -v ../var:/certbot/var \
   -d 11notes/certbot:[tag]
 ```
+
+## Defaults
+| Parameter | Value | Description |
+| --- | --- | --- |
+| `user` | docker | user docker |
+| `uid` | 1000 | user id 1000 |
+| `gid` | 1000 | group id 1000 |
 
 ## /certbot/etc/config.yaml
 ```shell
@@ -34,14 +41,14 @@ docker exec certbot update
 
 This will create all kinds of certificates (key, crt, fullchain, pfx, pk8) in the directory "/certbot/var". The generated *.pfx has no password! You can then mount the same docker volume (/certbot/var) in another container to use the generated certificates (i.e. nginx webserver).
 
-## Docker -u 1000:1000 (no root initiative)
-As part to make containers more secure, this container will not run as root, but as uid:gid 1000:1000. Therefore the default TCP port 80 was changed to 8080 (/source/certbot.conf).
+## Parent
+* [11notes/nginx:stable](https://github.com/11notes/docker-nginx)
 
-## Build with
-* [11notes/nginx:stable](https://github.com/11notes/docker-nginx) - Custom Parent Container
-* [Alpine Linux](https://alpinelinux.org/) - Alpine Linux
-* [Certbot](https://certbot.eff.org/) - Certbot Let's Encrypt
+## Built with
+* [certbot](https://certbot.eff.org/)
+* [nginx](https://nginx.org/)
+* [Alpine Linux](https://alpinelinux.org/)
 
 ## Tips
-* Don't bind to ports < 1024 (requires root), use NAT
-* [Permanent Storge with NFS/CIFS/...](https://github.com/11notes/alpine-docker-netshare) - Module to store permanent container data via NFS/CIFS/...
+* Don't bind to ports < 1024 (requires root), use NAT/reverse proxy
+* [Permanent Stroage](https://github.com/11notes/alpine-docker-netshare) - Module to store permanent container data via NFS/CIFS and more
