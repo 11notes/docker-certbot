@@ -7,11 +7,11 @@
   # :: update image
     RUN set -ex; \
       apk update; \
-      apk upgrade; \
       apk --update --no-cache add \
         yq \
         openssl \
         certbot; \
+      apk upgrade;
 
   # :: prepare image
     RUN set -ex; \
