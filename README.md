@@ -1,5 +1,5 @@
 # Alpine :: Certbot
-Run LetsEncrypt Certbot based on Alpine Linux. Small, lightweight, secure and fast.
+Run LetsEncrypt Certbot based on Alpine Linux. Small, lightweight, secure and fast 🏔️
 
 ## Volumes
 * **/certbot/etc** - Directory of config.yaml
@@ -45,10 +45,10 @@ This will create all kinds of certificates (key, crt, fullchain, pfx, pk8) in th
 * [11notes/nginx:stable](https://github.com/11notes/docker-nginx)
 
 ## Built with
-* [certbot](https://certbot.eff.org/)
-* [nginx](https://nginx.org/)
-* [Alpine Linux](https://alpinelinux.org/)
+* [certbot](https://certbot.eff.org) maintained by [Francesco Colista](https://pkgs.alpinelinux.org/packages?name=certbot&branch=v3.18&repo=&arch=&maintainer=Francesco%20Colista)
+* [nginx](https://nginx.org)
+* [Alpine Linux](https://alpinelinux.org)
 
 ## Tips
 * Don't bind to ports < 1024 (requires root), use NAT/reverse proxy
-* [Permanent Stroage](https://github.com/11notes/alpine-docker-netshare) - Module to store permanent container data via NFS/CIFS and more
+* [Permanent Storage](https://github.com/11notes/alpine-docker-netshare) - Module to store permanent container data via NFS/CIFS and more
