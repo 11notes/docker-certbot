@@ -16,7 +16,7 @@
     
     root="/certbot/etc/live/${NAME}"
     if [ ${dns} == "true" ]; then
-      certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials /certbot/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS_RFC2136_PROPAGATION_SECONDS}
+      certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials /certbot/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS_RFC2136_PROPAGATION_SECONDS} ${domains}
     else
       certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
     fi
