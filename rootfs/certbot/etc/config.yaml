@@ -6,5 +6,6 @@ certificates:
       - www.domain.com
   - name: "com.contoso"
     email: "info@contoso.com"
+    dns: true
     fqdn:
       - contoso.com

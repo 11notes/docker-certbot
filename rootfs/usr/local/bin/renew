@@ -5,6 +5,7 @@
     j=0
     domains=''
     email=$(yq '.certificates['${i}'].email' ${config})
+    dns=$(yq '.certificates['${i}'].dns' ${config})
     while read fqdn; do
       domain=$(yq '.certificates['${i}'].fqdn['${j}']' ${config})
       domains="${domains} -d ${domain}"
@@ -12,7 +13,11 @@
     done < <(yq '.certificates['${i}'].fqdn' ${config})
     
     root="/certbot/etc/live/${NAME}"
-    certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
+    if [ ${dns} == "true" ]; then
+      certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials /certbot/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS-RFC2136-PROPAGATION-SECONDS}
+    else
+      certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
+    fi
     openssl pkcs12 -export -keypbe NONE -certpbe NONE -out "${root}/cert.pfx" -inkey "${root}/privkey.pem" -in "${root}/cert.pem" -certfile "${root}/fullchain.pem" -passout pass:
     openssl pkcs8 -topk8 -inform PEM -outform DER -in "${root}/privkey.pem" -out "${root}/cert.pk8" -nocrypt
     cp -RL ${root} /certbot/var

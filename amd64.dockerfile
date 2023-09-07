@@ -6,11 +6,6 @@
 # :: Run
   USER root
 
-  # :: update image
-    RUN set -ex; \
-      apk update; \
-      apk upgrade;
-
   # :: prepare image
     RUN set -ex; \
       mkdir -p ${APP_ROOT}/etc; \
@@ -20,10 +15,11 @@
 
   # :: install application
     RUN set -ex; \
-      apk --update --no-cache add \
+      apk --no-cache add \
         yq \
         openssl \
-        certbot=${APP_VERSION};
+        certbot=${APP_VERSION}; \
+      apk --no-cache upgrade;
 
   # :: copy root filesystem changes and add execution rights to init scripts
     COPY ./rootfs /
@@ -38,6 +34,9 @@
 
 # :: Volumes
   VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var"]
+
+# :: Monitor
+  HEALTHCHECK CMD /usr/local/bin/healthcheck.sh || exit 1
 
 # :: Start
   USER docker
