@@ -1,5 +1,7 @@
 #!/bin/ash
   config="/certbot/etc/config.yaml"
+  if [ -z "${DNS_RFC2136_PROPAGATION_SECONDS}" ]; then DNS_RFC2136_PROPAGATION_SECONDS=60; fi
+
   i=0
   while read NAME; do
     j=0
