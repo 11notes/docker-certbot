@@ -24,13 +24,6 @@
       pip3 install certbot-dns-rfc2136; \
       apk --no-cache upgrade;
 
-  # fix security
-  # https://nvd.nist.gov/vuln/detail/CVE-2023-37920
-  # https://nvd.nist.gov/vuln/detail/CVE-2023-38325
-    RUN set -ex; \
-      pip3 install -U cryptography certifi; \
-      pip3 list;
-
   # :: copy root filesystem changes and add execution rights to init scripts
     COPY ./rootfs /
     RUN set -ex; \
