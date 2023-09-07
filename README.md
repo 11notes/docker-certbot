@@ -26,7 +26,7 @@ docker run --name certbot \
 ## Environment
 | Parameter | Value | Default |
 | --- | --- | --- |
-| `DNS-RFC2136-PROPAGATION-SECONDS` | time in seconds to wait for DNS propagation | 60 |
+| `DNS_RFC2136_PROPAGATION_SECONDS` | time in seconds to wait for DNS propagation | 60 |
 
 ## /certbot/etc/config.yaml
 ```shell

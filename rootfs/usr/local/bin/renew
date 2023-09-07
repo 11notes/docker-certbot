@@ -14,13 +14,15 @@
     
     root="/certbot/etc/live/${NAME}"
     if [ ${dns} == "true" ]; then
-      certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials /certbot/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS-RFC2136-PROPAGATION-SECONDS}
+      certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials /certbot/etc/dns.ini --DNS_RFC2136_PROPAGATION_SECONDS ${DNS_RFC2136_PROPAGATION_SECONDS}
     else
       certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
     fi
-    openssl pkcs12 -export -keypbe NONE -certpbe NONE -out "${root}/cert.pfx" -inkey "${root}/privkey.pem" -in "${root}/cert.pem" -certfile "${root}/fullchain.pem" -passout pass:
-    openssl pkcs8 -topk8 -inform PEM -outform DER -in "${root}/privkey.pem" -out "${root}/cert.pk8" -nocrypt
-    cp -RL ${root} /certbot/var
+    if [[ -f "${root}/privkey.pem" ]]; then
+      openssl pkcs12 -export -keypbe NONE -certpbe NONE -out "${root}/cert.pfx" -inkey "${root}/privkey.pem" -in "${root}/cert.pem" -certfile "${root}/fullchain.pem" -passout pass:
+      openssl pkcs8 -topk8 -inform PEM -outform DER -in "${root}/privkey.pem" -out "${root}/cert.pk8" -nocrypt
+      cp -RL ${root} /certbot/var
+    fi
 
     i=$((${i}+1))
   done < <(yq '.certificates[].name' ${config})
