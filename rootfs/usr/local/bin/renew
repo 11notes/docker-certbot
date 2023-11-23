@@ -1,6 +1,6 @@
 #!/bin/ash
   config="/certbot/etc/config.yaml"
-  if [ -z "${DNS_RFC2136_PROPAGATION_SECONDS}" ]; then DNS_RFC2136_PROPAGATION_SECONDS=60; fi
+  DNS_RFC2136_PROPAGATION_SECONDS=${DNS_RFC2136_PROPAGATION_SECONDS:-60}
 
   i=0
   while read NAME; do
@@ -24,6 +24,13 @@
       openssl pkcs12 -export -keypbe NONE -certpbe NONE -out "${root}/cert.pfx" -inkey "${root}/privkey.pem" -in "${root}/cert.pem" -certfile "${root}/fullchain.pem" -passout pass:
       openssl pkcs8 -topk8 -inform PEM -outform DER -in "${root}/privkey.pem" -out "${root}/cert.pk8" -nocrypt
       cp -RL ${root} /certbot/var
+      var=/certbot/var/${NAME}
+
+      # traefik style certificates
+      traefik=${var}/traefik
+      mkdir -p ${traefik}
+      cp ${traefik}/fullchain.pem ${traefik}/${NAME}.crt
+      cp ${traefik}/privkey.pem ${traefik}/${NAME}.key
     fi
 
     i=$((${i}+1))
