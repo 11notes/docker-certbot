@@ -29,8 +29,8 @@
       # traefik style certificates
       traefik=${var}/traefik
       mkdir -p ${traefik}
-      cp ${traefik}/fullchain.pem ${traefik}/${NAME}.crt
-      cp ${traefik}/privkey.pem ${traefik}/${NAME}.key
+      cp ${var}/fullchain.pem ${traefik}/${NAME}.crt
+      cp ${var}/privkey.pem ${traefik}/${NAME}.key
     fi
 
     i=$((${i}+1))
