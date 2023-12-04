@@ -53,6 +53,12 @@ certificates:
     dns: true
     fqdn:
       - contoso.com
+  - name: "com.microsoft"
+    email: "info@microsoft.com"
+    key: rsa
+    fqdn:
+      - microsoft.com
+      - www.microsoft.com
 ```
 
 ## create or update certificates

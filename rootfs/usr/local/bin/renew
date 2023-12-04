@@ -8,16 +8,20 @@
     domains=''
     email=$(yq '.certificates['${i}'].email' ${config})
     dns=$(yq '.certificates['${i}'].dns' ${config})
+    key=$(yq '.certificates['${i}'].key' ${config})
     while read fqdn; do
       domain=$(yq '.certificates['${i}'].fqdn['${j}']' ${config})
       domains="${domains} -d ${domain}"
       j=$((${j}+1))
     done < <(yq '.certificates['${i}'].fqdn' ${config})
+
+    KEY_TYPE="ecdsa"
+    if [ ${key} == "rsa"]; then KEY_TYPE="${key}"; fi
     
     if [ ${dns} == "true" ]; then
-      certbot certonly --no-eff-email --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials ${APP_ROOT}/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS_RFC2136_PROPAGATION_SECONDS} ${domains}
+      certbot certonly --no-eff-email -key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials ${APP_ROOT}/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS_RFC2136_PROPAGATION_SECONDS} ${domains}
     else
-      certbot certonly --no-eff-email --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
+      certbot certonly --no-eff-email -key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
     fi
     
     cert-dir "${NAME}"
