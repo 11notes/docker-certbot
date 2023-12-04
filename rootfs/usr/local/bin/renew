@@ -1,5 +1,5 @@
 #!/bin/ash
-  config="/certbot/etc/config.yaml"
+  config="${APP_ROOT}/etc/config.yaml"
   DNS_RFC2136_PROPAGATION_SECONDS=${DNS_RFC2136_PROPAGATION_SECONDS:-60}
 
   i=0
@@ -14,24 +14,13 @@
       j=$((${j}+1))
     done < <(yq '.certificates['${i}'].fqdn' ${config})
     
-    root="/certbot/etc/live/${NAME}"
     if [ ${dns} == "true" ]; then
-      certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials /certbot/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS_RFC2136_PROPAGATION_SECONDS} ${domains}
+      certbot certonly --no-eff-email --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials ${APP_ROOT}/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS_RFC2136_PROPAGATION_SECONDS} ${domains}
     else
-      certbot certonly --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
+      certbot certonly --no-eff-email --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
     fi
-    if [[ -f "${root}/privkey.pem" ]]; then
-      openssl pkcs12 -export -keypbe NONE -certpbe NONE -out "${root}/cert.pfx" -inkey "${root}/privkey.pem" -in "${root}/cert.pem" -certfile "${root}/fullchain.pem" -passout pass:
-      openssl pkcs8 -topk8 -inform PEM -outform DER -in "${root}/privkey.pem" -out "${root}/cert.pk8" -nocrypt
-      cp -RL ${root} /certbot/var
-      var=/certbot/var/${NAME}
-
-      # traefik style certificates
-      traefik=${var}/traefik
-      mkdir -p ${traefik}
-      cp ${var}/fullchain.pem ${traefik}/${NAME}.crt
-      cp ${var}/privkey.pem ${traefik}/${NAME}.key
-    fi
+    
+    cert-dir "${NAME}"
 
     i=$((${i}+1))
   done < <(yq '.certificates[].name' ${config})
