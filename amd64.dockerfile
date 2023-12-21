@@ -1,6 +1,6 @@
 # :: Header
   FROM 11notes/nginx:stable
-  ENV APP_VERSION=2.6.0-r0
+  ENV APP_VERSION=2.7.4-r0
   ENV APP_ROOT=/certbot
 
 # :: Run
