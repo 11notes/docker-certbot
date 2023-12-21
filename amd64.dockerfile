@@ -20,9 +20,9 @@
         rsync \
         openssl \
         certbot=${APP_VERSION} \
-        python3; \
-      python3 -m ensurepip; \
-      pip3 install certbot-dns-rfc2136; \
+        py3-pip \
+        python3=3.11.6-r1; \
+      pip3 install -t /usr/lib/python3.11/site-packages --upgrade certbot-dns-rfc2136; \
       apk --no-cache upgrade;
 
   # :: copy root filesystem changes and add execution rights to init scripts
