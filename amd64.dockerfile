@@ -17,6 +17,7 @@
     RUN set -ex; \
       apk --no-cache add \
         yq \
+        rsync \
         openssl \
         certbot=${APP_VERSION} \
         python3; \

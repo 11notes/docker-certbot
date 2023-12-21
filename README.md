@@ -12,6 +12,7 @@ This container will start a nginx webserver on port 8080 to retrieve certs via h
 ## Run
 ```shell
 docker run --name certbot \
+  -p 8080:8080/tcp \
   -v ../etc:/certbot/etc \
   -v ../var:/certbot/var \
   -d 11notes/certbot:[tag]

@@ -1,13 +1,23 @@
 #!/bin/ash
   if [[ -f "${APP_ROOT}/etc/live/${1}/privkey.pem" ]]; then
-    openssl pkcs12 -export -keypbe NONE -certpbe NONE -out "${APP_ROOT}/etc/live/${1}/cert.pfx" -inkey "${APP_ROOT}/etc/live/${1}/privkey.pem" -in "${APP_ROOT}/etc/live/${1}/cert.pem" -certfile "${APP_ROOT}/etc/live/${1}/fullchain.pem" -passout pass:
-    openssl pkcs8 -topk8 -inform PEM -outform DER -in "${APP_ROOT}/etc/live/${1}/privkey.pem" -out "${APP_ROOT}/etc/live/${1}/cert.pk8" -nocrypt
-    cp -RL ${APP_ROOT}/etc/live/${1} /certbot/var
-    var=/certbot/var/${1}
+    # create pfx
+    openssl pkcs12 -export -keypbe NONE -certpbe NONE -out "${APP_ROOT}/etc/live/${1}/${1}.pfx" -inkey "${APP_ROOT}/etc/live/${1}/privkey.pem" -in "${APP_ROOT}/etc/live/${1}/cert.pem" -certfile "${APP_ROOT}/etc/live/${1}/fullchain.pem" -passout pass:
+    
+    # create pk8
+    openssl pkcs8 -topk8 -inform PEM -outform DER -in "${APP_ROOT}/etc/live/${1}/privkey.pem" -out "${APP_ROOT}/etc/live/${1}/${1}.pk8" -nocrypt
 
-    # traefik style certificates
-    traefik=${var}/traefik
-    mkdir -p ${traefik}
-    cp ${var}/fullchain.pem ${traefik}/${1}.crt
-    cp ${var}/privkey.pem ${traefik}/${1}.key
+    # normalize key and cert format
+    cp ${APP_ROOT}/etc/live/${1}/fullchain.pem ${APP_ROOT}/etc/live/${1}/${1}.crt
+    cp ${APP_ROOT}/etc/live/${1}/privkey.pem ${APP_ROOT}/etc/live/${1}/${1}.key
+
+    # create destination
+    mkdir -p /certbot/var/${1}
+
+    # copy only needed certificates
+    /usr/bin/rsync -rvzc --delete --delete-excluded \
+      --include='*.crt' \
+      --include='*.key' \
+      --include='*.pfx' \
+      --include='*.pk8' \
+      --exclude='*' ${APP_ROOT}/etc/live/${1}/* /certbot/var/${1}
   fi
