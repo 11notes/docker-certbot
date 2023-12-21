@@ -14,7 +14,7 @@
     mkdir -p /certbot/var/${1}
 
     # copy only needed certificates
-    /usr/bin/rsync -rvzc --delete --delete-excluded \
+    /usr/bin/rsync -rvzcq --delete --delete-excluded \
       --include='*.crt' \
       --include='*.key' \
       --include='*.pfx' \

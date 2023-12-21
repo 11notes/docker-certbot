@@ -15,7 +15,8 @@ docker run --name certbot \
   -p 8080:8080/tcp \
   -v ../etc:/certbot/etc \
   -v ../var:/certbot/var \
-  -d 11notes/certbot:[tag]
+  -d 11notes/certbot:[tag] \
+    renew
 ```
 
 ## Tools
