@@ -1,9 +1,10 @@
 # Alpine :: Certbot
 ![size](https://img.shields.io/docker/image-size/11notes/certbot/2.7.4?color=0eb305) ![version](https://img.shields.io/docker/v/11notes/certbot?color=eb7a09) ![pulls](https://img.shields.io/docker/pulls/11notes/certbot?color=2b75d6) ![activity](https://img.shields.io/github/commit-activity/m/11notes/docker-certbot?color=c91cb8) ![commit-last](https://img.shields.io/github/last-commit/11notes/docker-certbot?color=c91cb8)
 
-Run LetsEncrypt Certbot based on Alpine Linux. Small, lightweight, secure and fast 🏔️
+Run Certbot based on Alpine Linux. Small, lightweight, secure and fast 🏔️
 
-This container will start a nginx webserver on port 8080 to retrieve certs via http method (default). It will also redirect any FQDN from HTTP to HTTPS. Certificate retrieval via DNS is possible too.
+## Description
+With this image you can create certificates from Let’s Encrypt either via HTTP challenge (TCP:80) or via DNS (RFC2136). This image will start a Nginx webserver listening for the HTTP challenge. It will produce all different kind of certificates that can then be used in other systems. It will also call an optional webhook on each certificate renewal (success or fail). As a bonus, it will redirect all HTTP calls (not from Certbot) permanent to HTTPS.
 
 ## Volumes
 * **/certbot/etc** - Directory of config.yaml and dns.ini
@@ -13,19 +14,9 @@ This container will start a nginx webserver on port 8080 to retrieve certs via h
 ```shell
 docker run --name certbot \
   -p 8080:8080/tcp \
-  -v ../etc:/certbot/etc \
-  -v ../var:/certbot/var \
-  -d 11notes/certbot:[tag] \
-    renew
-```
-
-## Tools
-Issue an interactive DNS challenge certificate (no account will be created, no email needed).
-```shell
-docker run --name certbot \
-  -v ../var:/certbot/var \
-  -d 11notes/certbot:[tag] \
-    renew-man-dns "mycertificate" "-d *.domain.com -d www.domain.com"
+  -v .../etc:/certbot/etc \
+  -v .../var:/certbot/var \
+  -d 11notes/certbot:[tag]
 ```
 
 ## Defaults
@@ -35,45 +26,20 @@ docker run --name certbot \
 | `uid` | 1000 | user id 1000 |
 | `gid` | 1000 | group id 1000 |
 | `home` | /certbot | home directory of user docker |
+| `api` | http://${IP}:8080 | Certbot endpoint |
 
 ## Environment
 | Parameter | Value | Default |
 | --- | --- | --- |
+| `TZ` | [Time Zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) | null |
 | `DNS_RFC2136_PROPAGATION_SECONDS` | time in seconds to wait for DNS propagation | 60 |
 | `KEY_TYPE` | set key type (rsa or ecdsa) | ecdsa |
+| `WEBHOOK` | Will call ${URL}/${NAME}/[fail|success] with PUT and payload json `domains` |  |
 
-## /certbot/etc/config.yaml
-```shell
-certificates:
-  - name: "com.domain"
-    email: "info@domain.com"
-    fqdn:
-      - domain.com
-      - www.domain.com
-  - name: "com.contoso"
-    email: "info@contoso.com"
-    dns: true
-    fqdn:
-      - contoso.com
-  - name: "com.microsoft"
-    email: "info@microsoft.com"
-    key: rsa
-    fqdn:
-      - microsoft.com
-      - www.microsoft.com
-```
-
-## create or update certificates
-```shell
-docker exec certbot renew
-```
-
-This will create all kinds of certificates (key, crt, fullchain, pfx, pk8) in the directory "/certbot/var". The generated *.pfx has no password! You can then mount the same docker volume (/certbot/var) in another container to use the generated certificates (i.e. nginx webserver). If dns is set to true, certbot will use /certbot/etc/dns.ini to connect to your RFC2136 enabled DNS server and retrieve certificates via DNS. Default is HTTP method.
-
-## Parent Image
+## Parent image
 * [11notes/nginx:stable](https://github.com/11notes/docker-nginx)
 
-## Built with and thanks to
+## Built with (thanks to)
 * [certbot](https://certbot.eff.org)
 * [nginx](https://nginx.org)
 * [Alpine Linux](https://alpinelinux.org)

@@ -7,27 +7,50 @@
   while read NAME; do
     j=0
     domains=''
+    adomains=''
+    urlname=$(jq -rn --arg x ${NAME} '$x|@uri')
     email=$(yq '.certificates['${i}'].email' ${config})
     dns=$(yq '.certificates['${i}'].dns' ${config})
     key=$(yq '.certificates['${i}'].key' ${config})
     while read fqdn; do
       domain=$(yq '.certificates['${i}'].fqdn['${j}']' ${config})
       domains="${domains} -d ${domain}"
+      adomains="${adomains},\"${domain}\""
       j=$((${j}+1))
     done < <(yq '.certificates['${i}'].fqdn' ${config})
+    adomains=$(echo ${adomains} | cut -c2-)
 
     KEY_TYPE=${KEY_TYPE:-ecdsa}
     if [ ${key} == "rsa" ]; then KEY_TYPE="${key}"; fi
-    
+    mkdir -p ${APP_ROOT}/log/${NAME}
+    rm -f ${APP_ROOT}/log/${NAME}/*
+
+    CERTBOT_EXIT_CODE=0    
     if [ ${dns} == "true" ]; then
       log-json info "renew ${NAME} via DNS challenge"
-      certbot certonly --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials ${APP_ROOT}/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS_RFC2136_PROPAGATION_SECONDS} ${domains}
+      certbot certonly -q --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials ${APP_ROOT}/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS_RFC2136_PROPAGATION_SECONDS} ${domains} > /dev/null 2>&1
+      CERTBOT_EXIT_CODE=$?
     else
       log-json info "renew ${NAME} via HTTP challenge"
-      certbot certonly --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
+      certbot certonly -q --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains} > /dev/null 2>&1
+      CERTBOT_EXIT_CODE=$?
     fi
-    
-    cert-dir "${NAME}"
+   
+    if [ ! ${CERTBOT_EXIT_CODE} == 0 ]; then
+      CERTBOT_STATUS="fail"
+      log-json error "${NAME} could not be renewed!"
+    else
+      CERTBOT_STATUS="success"
+      log-json info "successful renewal of ${NAME} via DNS challenge"
+      cert-dir "${NAME}"
+    fi
+
+    if [ ! -z "${WEBHOOK}" ]; then
+      curl --max-time 5 -H "Content-Type: application/json" \
+        -X PUT \
+        --data '{"domains":['"${adomains}"']}' \
+        ${WEBHOOK}/${urlname}/${CERTBOT_STATUS} 2>&1
+    fi
 
     i=$((${i}+1))    
   done < <(yq '.certificates[].name' ${config})

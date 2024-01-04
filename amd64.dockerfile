@@ -25,6 +25,8 @@
   # :: install application
     RUN set -ex; \
       apk --no-cache add \
+        curl \
+        jq \
         yq \
         rsync \
         openssl \

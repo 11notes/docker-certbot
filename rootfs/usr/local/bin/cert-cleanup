@@ -8,6 +8,7 @@
         rm -rf ${APP_ROOT}/etc/archive/${NAME}
         rm -rf ${APP_ROOT}/etc/live/${NAME}
         rm -rf ${APP_ROOT}/var/${NAME}
+        rm -rf ${APP_ROOT}/log/${NAME}
       fi
     fi
   done
