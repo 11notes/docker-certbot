@@ -1,5 +1,14 @@
+# :: Util
+  FROM alpine as util
+
+  RUN set -ex; \
+    apk add --no-cache \
+      git; \
+    git clone https://github.com/11notes/util.git;
+
 # :: Header
   FROM 11notes/nginx:stable
+  COPY --from=util /util/linux/shell/log-json /usr/local/bin
   ENV APP_VERSION=2.7.4-r0
   ENV APP_ROOT=/certbot
 

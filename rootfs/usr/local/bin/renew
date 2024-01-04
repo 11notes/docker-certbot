@@ -1,6 +1,7 @@
 #!/bin/ash
   config="${APP_ROOT}/etc/config.yaml"
   DNS_RFC2136_PROPAGATION_SECONDS=${DNS_RFC2136_PROPAGATION_SECONDS:-60}
+  log-json info "renew all certificates defined in ${config}"
 
   i=0
   while read NAME; do
@@ -15,12 +16,14 @@
       j=$((${j}+1))
     done < <(yq '.certificates['${i}'].fqdn' ${config})
 
-    KEY_TYPE="ecdsa"
+    KEY_TYPE=${KEY_TYPE:-ecdsa}
     if [ ${key} == "rsa" ]; then KEY_TYPE="${key}"; fi
     
     if [ ${dns} == "true" ]; then
+      log-json info "renew ${NAME} via DNS challenge"
       certbot certonly --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials ${APP_ROOT}/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS_RFC2136_PROPAGATION_SECONDS} ${domains}
     else
+      log-json info "renew ${NAME} via HTTP challenge"
       certbot certonly --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains}
     fi
     

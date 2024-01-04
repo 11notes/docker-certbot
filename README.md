@@ -40,7 +40,7 @@ docker run --name certbot \
 | Parameter | Value | Default |
 | --- | --- | --- |
 | `DNS_RFC2136_PROPAGATION_SECONDS` | time in seconds to wait for DNS propagation | 60 |
-| `KEY_TYPE` | set key type for renew-man-dns (rsa or ecdsa) | ecdsa |
+| `KEY_TYPE` | set key type (rsa or ecdsa) | ecdsa |
 
 ## /certbot/etc/config.yaml
 ```shell
