@@ -23,5 +23,5 @@
       --exclude=''${APP_ROOT}/etc/live/${1}/*'' ${APP_ROOT}/etc/live/${1} /certbot/var
 
     # zip directory
-    tar -czf /certbot/var/${1}/${1}.tar.gz -C /certbot/var/${1} . 2>&1 > /dev/null
+    tar -czf /certbot/var/${1}/${1}.tar.gz -C /certbot/var/${1} . 2>&1 /dev/null
   fi
