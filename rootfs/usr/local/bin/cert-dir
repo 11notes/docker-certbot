@@ -2,7 +2,7 @@
   if [[ -f "${APP_ROOT}/etc/live/${1}/privkey.pem" ]]; then
     # create pfx
     openssl pkcs12 -export -keypbe NONE -certpbe NONE -out "${APP_ROOT}/etc/live/${1}/${1}.pfx" -inkey "${APP_ROOT}/etc/live/${1}/privkey.pem" -in "${APP_ROOT}/etc/live/${1}/cert.pem" -certfile "${APP_ROOT}/etc/live/${1}/fullchain.pem" -passout pass:
-    
+
     # create pk8
     openssl pkcs8 -topk8 -inform PEM -outform DER -in "${APP_ROOT}/etc/live/${1}/privkey.pem" -out "${APP_ROOT}/etc/live/${1}/${1}.pk8" -nocrypt
 
@@ -19,9 +19,8 @@
       --include='*.key' \
       --include='*.pfx' \
       --include='*.pk8' \
-      --exclude='README' \
-      --exclude=''${APP_ROOT}/etc/live/${1}/*'' ${APP_ROOT}/etc/live/${1} /certbot/var
+      --exclude='*' ${APP_ROOT}/etc/live/${1}/* ${APP_ROOT}/var/${1}
 
     # zip directory
-    tar -czf /certbot/var/${1}/${1}.tar.gz -C /certbot/var/${1} . 2>&1 /dev/null
+    tar --overwrite -czf /certbot/var/${1}/${1}.tar.gz -C /certbot/var/${1} . &> /dev/null
   fi
