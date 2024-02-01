@@ -19,7 +19,7 @@
       --include='*.key' \
       --include='*.pfx' \
       --include='*.pk8' \
-      --exclude='*' ${APP_ROOT}/etc/live/${1}/* ${APP_ROOT}/var/${1}
+      --exclude='*' ${APP_ROOT}/etc/live/${1}/ ${APP_ROOT}/var/${1}/
 
     # zip directory
     tar --overwrite -czf /certbot/var/${1}/${1}.tar.gz -C /certbot/var/${1} . &> /dev/null

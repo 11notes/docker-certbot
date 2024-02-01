@@ -1,5 +1,5 @@
 #!/bin/ash
   KEY_TYPE=${KEY_TYPE:-ecdsa}
-  log-json info "renew ${1} via DNS challenge (no acme account)"
+  elevenLogJSON info "renew ${1} via DNS challenge (no acme account)"
   certbot certonly ---no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir /certbot/etc --work-dir /certbot/lib --logs-dir /certbot/log --cert-name ${1} --agree-tos --register-unsafely-without-email --keep --manual --preferred-challenges dns ${2}
   cert-dir "${1}"

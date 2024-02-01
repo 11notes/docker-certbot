@@ -4,7 +4,7 @@
     if [ -f "${DIR}/cert.pem" ]; then
       END=$(openssl x509 -enddate -noout -in "${DIR}/cert.pem" -checkend 0)
       if echo ${END} | grep -q 'will expire'; then
-        log-json info "certificates of ${NAME} deleted (expired)"
+        elevenLogJSON info "certificates of ${NAME} deleted (expired)"
         rm -rf ${APP_ROOT}/etc/archive/${NAME}
         rm -rf ${APP_ROOT}/etc/live/${NAME}
         rm -rf ${APP_ROOT}/var/${NAME}

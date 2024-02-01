@@ -1,58 +1,71 @@
 #!/bin/ash
-  config="${APP_ROOT}/etc/config.yaml"
-  DNS_RFC2136_PROPAGATION_SECONDS=${DNS_RFC2136_PROPAGATION_SECONDS:-60}
-  log-json info "renew all certificates defined in ${config}"
+  YAML="${APP_ROOT}/etc/config.yaml"
 
   i=0
   while read NAME; do
     j=0
-    domains=''
-    adomains=''
-    urlname=$(jq -rn --arg x ${NAME} '$x|@uri')
-    email=$(yq '.certificates['${i}'].email' ${config})
-    dns=$(yq '.certificates['${i}'].dns' ${config})
-    key=$(yq '.certificates['${i}'].key' ${config})
+    YAML_DOMAINS=''
+    WEBHOOK_DOMAINS=''
+
+    WEBHOOK_PATH=$(jq -rn --arg x ${NAME} '$x|@uri')
+    YAML_EMAIL=$(yq '.certificates['${i}'].email' ${YAML})
+    YAML_KEY=$(yq '.certificates['${i}'].key' ${YAML})
+    YAML_MODULE=$(yq '.certificates['${i}'].module' ${YAML})
+    if [ ${YAML_MODULE} == "null" ]; then YAML_MODULE="http"; fi
+
     while read fqdn; do
-      domain=$(yq '.certificates['${i}'].fqdn['${j}']' ${config})
-      domains="${domains} -d ${domain}"
-      adomains="${adomains},\"${domain}\""
+      YAML_DOMAIN=$(yq '.certificates['${i}'].fqdn['${j}']' ${YAML})
+      YAML_DOMAINS="${YAML_DOMAINS} -d ${YAML_DOMAIN}"
+      WEBHOOK_DOMAINS="${WEBHOOK_DOMAINS},\"${YAML_DOMAIN}\""
       j=$((${j}+1))
-    done < <(yq '.certificates['${i}'].fqdn' ${config})
-    adomains=$(echo ${adomains} | cut -c2-)
+    done < <(yq '.certificates['${i}'].fqdn' ${YAML})
+
+    WEBHOOK_DOMAINS=$(echo ${WEBHOOK_DOMAINS} | cut -c2-)
 
     KEY_TYPE=${KEY_TYPE:-ecdsa}
-    if [ ${key} == "rsa" ]; then KEY_TYPE="${key}"; fi
+    if [ ${YAML_KEY} == "rsa" ]; then KEY_TYPE="${YAML_KEY}"; fi
+
     mkdir -p ${APP_ROOT}/log/${NAME}
     rm -f ${APP_ROOT}/log/${NAME}/*
 
-    CERTBOT_EXIT_CODE=0    
-    if [ ${dns} == "true" ]; then
-      log-json info "renew ${NAME} via DNS challenge"
-      certbot certonly -q --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --dns-rfc2136 --dns-rfc2136-credentials ${APP_ROOT}/etc/dns.ini --dns-rfc2136-propagation-seconds ${DNS_RFC2136_PROPAGATION_SECONDS} ${domains} > /dev/null 2>&1
-      CERTBOT_EXIT_CODE=$?
-    else
-      log-json info "renew ${NAME} via HTTP challenge"
-      certbot certonly -q --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${email} --keep --webroot -w /nginx/www ${domains} > /dev/null 2>&1
-      CERTBOT_EXIT_CODE=$?
-    fi
+    EXIT=0
+    CERBOT_CMD="certbot certonly -q --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${YAML_EMAIL} --keep"
+    case ${YAML_MODULE} in
+      http)
+        ${CERBOT_CMD} \
+          --http-01-port ${HTTP_PORT:-80} \
+          --webroot -w /nginx/www \
+          ${YAML_DOMAINS} > /dev/null 2>&1
+      ;;
+
+      rfc2136)
+        ${CERBOT_CMD} \
+          --dns-rfc2136 \
+          --dns-rfc2136-credentials ${RFC2136_CREDENTIALS:-"${APP_ROOT}/etc/dns.ini"} \
+          --dns-rfc2136-propagation-seconds ${RFC2136_PROPAGATION_SECONDS:-60} \
+          ${YAML_DOMAINS} > /dev/null 2>&1
+      ;;
+    esac
+    EXIT=$?
    
-    if [ ! ${CERTBOT_EXIT_CODE} == 0 ]; then
-      CERTBOT_STATUS="fail"
-      log-json error "${NAME} could not be renewed!"
-    else
-      CERTBOT_STATUS="success"
-      log-json info "successful renewal of ${NAME} via DNS challenge"
+    if [ ${EXIT} == 0 ]; then
+      elevenLogJSON info "${NAME} with module ${YAML_MODULE} created"
       cert-dir "${NAME}"
+      WEBHOOK_ERROR="\"error\":false," 
+    else
+      elevenLogJSON error "${NAME} with module ${YAML_MODULE} failed"
+      WEBHOOK_ERROR="\"error\":true,"  
     fi
 
-    if [ ! -z "${WEBHOOK}" ]; then
+    if [ ! -z "${WEBHOOK_URL}" ]; then
+      echo '{'${WEBHOOK_ERROR}'"name":'"${NAME}"', "domains":['"${WEBHOOK_DOMAINS}"']}'
       curl --max-time 5 -H "Content-Type: application/json" \
         -X PUT \
-        --data '{"domains":['"${adomains}"']}' \
-        ${WEBHOOK}/${urlname}/${CERTBOT_STATUS} 2>&1
+        --data '{'${WEBHOOK_ERROR}'"name":'"${NAME}"',"domains":['"${WEBHOOK_DOMAINS}"']}' \
+        ${WEBHOOK_URL}${WEBHOOK_PATH} 2>&1
     fi
 
     i=$((${i}+1))    
-  done < <(yq '.certificates[].name' ${config})
+  done < <(yq '.certificates[].name' ${YAML})
 
   cert-cleanup

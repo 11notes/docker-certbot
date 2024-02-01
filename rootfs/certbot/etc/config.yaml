@@ -1,16 +1,20 @@
 certificates:
+  # name must be unique and is used for the file names
   - name: "com.domain"
     email: "info@domain.com"
+    # up to 100 FQDN or wildcard allowed
     fqdn:
       - domain.com
       - www.domain.com
   - name: "com.contoso"
     email: "info@contoso.com"
-    dns: true
+    # define module to use
+    module: rfc2136
     fqdn:
       - contoso.com
   - name: "com.microsoft"
     email: "info@microsoft.com"
+    # use RSA instead of ECDSA
     key: rsa
     fqdn:
       - microsoft.com
