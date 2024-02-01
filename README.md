@@ -91,6 +91,6 @@ Traefik redirect HTTP:80 to certbot container:
 * Allow non-root ports < 1024 via `echo "net.ipv4.ip_unprivileged_port_start=53" > /etc/sysctl.d/ports.conf`
 * Use a reverse proxy like Traefik, Nginx to terminate TLS with a valid certificate
 
-# FOOTNOTE
-This image is provided to you by **ElevenNotes<sup>™️</sup>**, use it at your own risk. Always make backups before updating an image to a new version. Check the changelog for breaking changes.
+# ElevenNotes<sup>™️</sup>
+This image is provided to you at your own risk. Always make backups before updating an image to a new version. Check the changelog for breaking changes.
     
