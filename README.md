@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ![Banner](https://github.com/11notes/defaults/blob/main/static/img/banner.png?raw=true)
 
 # 🏔️ Alpine - Certbot
@@ -5,6 +6,12 @@
 
 # SYNOPSIS
 With this image you can create certificates from Let’s Encrypt via different modules. This image will start a Nginx webserver listening for the HTTP challenge. It will produce all different kind of certificates that can then be used in other systems. It will also call an optional webhook on each certificate renewal (success or fail). As a bonus, it will redirect all HTTP calls (not from Certbot) permanent to HTTPS.
+=======
+![ElevenNotes](/Banner.png?raw=true)
+
+# Alpine :: Certbot
+![size](https://img.shields.io/docker/image-size/11notes/certbot/2.7.4?color=0eb305) ![version](https://img.shields.io/docker/v/11notes/certbot?color=eb7a09) ![pulls](https://img.shields.io/docker/pulls/11notes/certbot?color=2b75d6) ![activity](https://img.shields.io/github/commit-activity/m/11notes/docker-certbot?color=c91cb8) ![commit-last](https://img.shields.io/github/last-commit/11notes/docker-certbot?color=c91cb8)
+>>>>>>> 3458a6c01309055313f2356d3639e5880d32e592
 
 Simply configure your desired certificates via yaml (`/certbot/etc/config.yaml`). Configure each module with the information it needs. After that you can periodically run `docker exec certbot renew`. Certbot will then automatically renew or create all certificates defined in `config.yaml`, it will clean up expired certificates and create additional certificate types (`*.pfx, *.pk8`) as well as a tar with all files. If you set the `WEBHOOK_URL`, it will call the webhook on each renewal attempt.
 
@@ -88,9 +95,13 @@ Traefik redirect HTTP:80 to certbot container:
 
 # TIPS
 * Only use rootless container runtime (podman, rootless docker)
+<<<<<<< HEAD
 * Allow non-root ports < 1024 via `echo "net.ipv4.ip_unprivileged_port_start=53" > /etc/sysctl.d/ports.conf`
 * Use a reverse proxy like Traefik, Nginx to terminate TLS with a valid certificate
 
 # ElevenNotes<sup>™️</sup>
 This image is provided to you at your own risk. Always make backups before updating an image to a new version. Check the changelog for breaking changes.
     
+=======
+* Don't bind to ports < 1024 (requires root), use NAT/reverse proxy (haproxy, traefik, nginx)
+>>>>>>> 3458a6c01309055313f2356d3639e5880d32e592
