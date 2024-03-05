@@ -90,7 +90,7 @@ Traefik redirect HTTP:80 to certbot container:
 | `rfc2136` | RFC2136_CREDENTIALS | path to dns.ini | /certbot/etc/dns.ini |
 
 # PARENT IMAGE
-* [11notes/node:stable](https://hub.docker.com/r/11notes/node)
+* [11notes/nginx:stable](https://hub.docker.com/r/11notes/nginx)
 
 # BUILT WITH
 * [certbot](https:/certbot.eff.org)

@@ -9,7 +9,7 @@
 # :: Header
   FROM 11notes/nginx:stable
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
-  ENV APP_VERSION=v2.7.4-r0
+  ENV APP_VERSION=2.7.4-r0
   ENV APP_NAME="certbot"
   ENV APP_ROOT=/certbot
 
@@ -33,7 +33,7 @@
         openssl \
         certbot=${APP_VERSION} \
         py3-pip \
-        python3=3.11.6-r1; \
+        python3=3.11.8-r0; \
       pip3 install -t /usr/lib/python3.11/site-packages --upgrade certbot-dns-rfc2136; \
       apk --no-cache upgrade;
 
