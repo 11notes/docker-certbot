@@ -28,25 +28,37 @@ docker run --name certbot \
 ```yaml
 certificates:
   # name must be unique and is used for the file names
+  # up to 100 FQDN or wildcard allowed
+
   - name: "com.domain"
     email: "info@domain.com"
-    # up to 100 FQDN or wildcard allowed
     fqdn:
       - domain.com
       - www.domain.com
-  - name: "com.contoso"
-    email: "info@contoso.com"
-    # define module to use
+
+  # define module to use
+  - name: "com.domain.dns"
+    email: "info@domain.com"
     module: rfc2136
     fqdn:
-      - contoso.com
-  - name: "com.microsoft"
-    email: "info@microsoft.com"
-    # use RSA instead of ECDSA
+      - *.domain.com
+      - www.domain.com
+
+  # use RSA instead of ECDSA for legacy systems
+  - name: "com.domain.rsa"
+    email: "info@domain.com"
     key: rsa
     fqdn:
-      - microsoft.com
-      - www.microsoft.com
+      - domain.com
+      - www.domain.com
+
+  - name: "com.domain.webhook"
+    email: "info@domain.com"
+    # use webhook
+    webhook: true
+    fqdn:
+      - domain.com
+      - www.domain.com
 ```
 
 Traefik redirect HTTP:80 to certbot container:
@@ -60,8 +72,7 @@ Traefik redirect HTTP:80 to certbot container:
 | `user` | docker | user docker |
 | `uid` | 1000 | user id 1000 |
 | `gid` | 1000 | group id 1000 |
-| `home` |  | home directory of user docker |
-| `api` | http://${IP}:8080 | Certbot endpoint |
+| `home` | /certbot | home directory of user docker |
 
 # ENVIRONMENT
 | Parameter | Value | Default |
@@ -69,7 +80,7 @@ Traefik redirect HTTP:80 to certbot container:
 | `TZ` | [Time Zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) | |
 | `DEBUG` | Show debug information | |
 | `KEY_TYPE` | set key type (RSA or ECDSA) | ECDSA |
-| `WEBHOOK_URL` | Will call `PUT https://api.domain.com/com.domain` with a json payload |  |
+| `WEBHOOK_URL` | webhook to call if `webhook: true` is set |  |
 
 # AVAILABLE MODULES
 | Module | Parameter | Description | Default |
@@ -90,6 +101,7 @@ Traefik redirect HTTP:80 to certbot container:
 * Only use rootless container runtime (podman, rootless docker)
 * Allow non-root ports < 1024 via `echo "net.ipv4.ip_unprivileged_port_start=53" > /etc/sysctl.d/ports.conf`
 * Use a reverse proxy like Traefik, Nginx to terminate TLS with a valid certificate
+* Use Let’s Encrypt certificates to protect your SSL endpoints
 
 # ElevenNotes<sup>™️</sup>
 This image is provided to you at your own risk. Always make backups before updating an image to a new version. Check the changelog for breaking changes.

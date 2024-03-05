@@ -1,6 +1,6 @@
 #!/bin/ash
   if [ -z "${1}" ]; then
-    elevenLogJSON info "starting nginx"
+    elevenLogJSON info "starting certbot"
     set -- "nginx" \
       -g \
       'daemon off;'

@@ -7,11 +7,12 @@
     YAML_DOMAINS=''
     WEBHOOK_DOMAINS=''
 
-    WEBHOOK_PATH=$(jq -rn --arg x ${NAME} '$x|@uri')
     YAML_EMAIL=$(yq '.certificates['${i}'].email' ${YAML})
     YAML_KEY=$(yq '.certificates['${i}'].key' ${YAML})
     YAML_MODULE=$(yq '.certificates['${i}'].module' ${YAML})
+    YAML_WEBHOOK=$(yq '.certificates['${i}'].webhook' ${YAML})
     if [ ${YAML_MODULE} == "null" ]; then YAML_MODULE="http"; fi
+    if [ ${YAML_WEBHOOK} == "null" ]; then YAML_WEBHOOK="false"; fi
 
     while read fqdn; do
       YAML_DOMAIN=$(yq '.certificates['${i}'].fqdn['${j}']' ${YAML})
@@ -35,7 +36,7 @@
         ${CERBOT_CMD} \
           --http-01-port ${HTTP_PORT:-80} \
           --webroot -w /nginx/www \
-          ${YAML_DOMAINS} > /dev/null 2>&1
+          ${YAML_DOMAINS} > /dev/null &> /dev/null
       ;;
 
       rfc2136)
@@ -43,7 +44,7 @@
           --dns-rfc2136 \
           --dns-rfc2136-credentials ${RFC2136_CREDENTIALS:-"${APP_ROOT}/etc/dns.ini"} \
           --dns-rfc2136-propagation-seconds ${RFC2136_PROPAGATION_SECONDS:-60} \
-          ${YAML_DOMAINS} > /dev/null 2>&1
+          ${YAML_DOMAINS} > /dev/null &> /dev/null
       ;;
     esac
     EXIT=$?
@@ -51,18 +52,24 @@
     if [ ${EXIT} == 0 ]; then
       elevenLogJSON info "${NAME} with module ${YAML_MODULE} created"
       cert-dir "${NAME}"
-      WEBHOOK_ERROR="\"error\":false," 
+      WEBHOOK_ERROR=false
     else
       elevenLogJSON error "${NAME} with module ${YAML_MODULE} failed"
-      WEBHOOK_ERROR="\"error\":true,"  
+      WEBHOOK_ERROR=true
     fi
 
-    if [ ! -z "${WEBHOOK_URL}" ]; then
-      echo '{'${WEBHOOK_ERROR}'"name":'"${NAME}"', "domains":['"${WEBHOOK_DOMAINS}"']}'
-      curl --max-time 5 -H "Content-Type: application/json" \
-        -X PUT \
-        --data '{'${WEBHOOK_ERROR}'"name":'"${NAME}"',"domains":['"${WEBHOOK_DOMAINS}"']}' \
-        ${WEBHOOK_URL}${WEBHOOK_PATH} 2>&1
+    if [ ! -z "${WEBHOOK_URL}" ] && [ ${YAML_WEBHOOK} == "true" ]; then
+      if [ -f "${APP_ROOT}/var/${NAME}/${NAME}.crt" ]; then
+        echo '{}' | jq \
+          --arg error ${WEBHOOK_ERROR} \
+          --arg name ${NAME} \
+          --argjson domain ${WEBHOOK_DOMAINS} \
+          --arg crt "$(cat ${APP_ROOT}/var/${NAME}/${NAME}.crt)" \
+          --arg key "$(cat ${APP_ROOT}/var/${NAME}/${NAME}.key)" \
+        '{"error": $error, "name": $name, "domain": [$domain], "crt": $crt, "key": $key}' > ${APP_ROOT}/etc/live/${name}/data.json
+
+        curl --max-time 5 -H "Content-Type: application/json" -X PUT -d @${APP_ROOT}/etc/live/${name}/data.json ${WEBHOOK_URL} &> /dev/null
+      fi
     fi
 
     i=$((${i}+1))    

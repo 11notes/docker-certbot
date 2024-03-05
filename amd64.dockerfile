@@ -9,7 +9,8 @@
 # :: Header
   FROM 11notes/nginx:stable
   COPY --from=util /util/linux/shell/elevenLogJSON /usr/local/bin
-  ENV APP_VERSION=2.7.4-r0
+  ENV APP_VERSION=v2.7.4-r0
+  ENV APP_NAME="certbot"
   ENV APP_ROOT=/certbot
 
 # :: Run

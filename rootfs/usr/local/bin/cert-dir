@@ -10,11 +10,8 @@
     cp ${APP_ROOT}/etc/live/${1}/fullchain.pem ${APP_ROOT}/etc/live/${1}/${1}.crt
     cp ${APP_ROOT}/etc/live/${1}/privkey.pem ${APP_ROOT}/etc/live/${1}/${1}.key
 
-    # create destination
-    mkdir -p /certbot/var/${1}
-
     # copy only needed certificates
-    /usr/bin/rsync -rvzcq --delete --delete-excluded \
+    /usr/bin/rsync -rvzcq --delete --delete-excluded --mkpath \
       --include='*.crt' \
       --include='*.key' \
       --include='*.pfx' \
