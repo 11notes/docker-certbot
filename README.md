@@ -6,9 +6,12 @@
 # SYNOPSIS
 With this image you can create certificates from Let’s Encrypt via different modules. This image will start a Nginx webserver listening for the HTTP challenge. It will produce all different kind of certificates that can then be used in other systems. It will also call an optional webhook on each certificate renewal (success or fail). As a bonus, it will redirect all HTTP calls (not from Certbot) permanent to HTTPS.
 
-Simply configure your desired certificates via yaml (`/certbot/etc/config.yaml`). Configure each module with the information it needs. After that you can periodically run `docker exec certbot renew`. Certbot will then automatically renew or create all certificates defined in `config.yaml`, it will clean up expired certificates and create additional certificate types (`*.pfx, *.pk8`) as well as a tar with all files. If you set the `WEBHOOK_URL`, it will call the webhook on each renewal attempt.
+Simply configure your desired certificates via yaml (`/certbot/etc/config.yaml`). Configure each module with the information it needs. After that you can periodically run `docker exec certbot renew`. Certbot will then automatically renew or create all certificates defined in `config.yaml`, it will clean up expired certificates and create additional certificate types (`*.pfx, *.pk8`) as well as a tar with all files. You can call a webhook or script on each certificate renewal.
 
 Why use this image at all and not simply use Certbot with Traefik? Simple answer: All though most systems can be proxies via Traefik or other reverse proxies that can auto update their certificates themselves, a lot of systems that can’t be proxied still need valid SSL certificates (like database authentication, MQTT, SMTP, RDP and so on). Since this image will create valid SSL certificates and call a possible webhook on each success or fail, that webhook can be used to update the certificates on these non-proxy systems.
+
+# 3RD PARTY SYSTEMS SUPPORTED
+* **Horizon View Unified Access Gateway**
 
 # VOLUMES
 * **/certbot/etc** - Directory of config.yaml and dns.ini
@@ -44,31 +47,28 @@ certificates:
     module: rfc2136
     fqdn:
       - *.domain.com
-      - www.domain.com
 
-  # use RSA instead of ECDSA for legacy systems
+  # use RSA instead of ECDSA
   - name: "com.domain.rsa"
     email: "info@domain.com"
     key: rsa
     fqdn:
       - domain.com
-      - www.domain.com
 
+  # call webhook
   - name: "com.domain.webhook"
     email: "info@domain.com"
-    # call webhook
     webhook: https://domain.com/certbot
     fqdn:
       - domain.com
-      - www.domain.com
 
-  - name: "com.domain.webhook"
+  # call script
+  - name: "com.domain.script"
     email: "info@domain.com"
-    # call script
     script: /certbot/scripts/vmware.horizon.uag.sh
+    key: rsa
     fqdn:
       - domain.com
-      - www.domain.com
 ```
 
 Traefik redirect HTTP:80 to certbot container:

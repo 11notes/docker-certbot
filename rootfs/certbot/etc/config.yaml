@@ -14,28 +14,25 @@ certificates:
     module: rfc2136
     fqdn:
       - *.domain.com
-      - www.domain.com
 
-  # use RSA instead of ECDSA for legacy systems
+  # use RSA instead of ECDSA
   - name: "com.domain.rsa"
     email: "info@domain.com"
     key: rsa
     fqdn:
       - domain.com
-      - www.domain.com
 
+  # call webhook
   - name: "com.domain.webhook"
     email: "info@domain.com"
-    # call webhook
     webhook: https://domain.com/certbot
     fqdn:
       - domain.com
-      - www.domain.com
 
-  - name: "com.domain.webhook"
+  # call script
+  - name: "com.domain.script"
     email: "info@domain.com"
-    # call script
     script: /certbot/scripts/vmware.horizon.uag.sh
+    key: rsa
     fqdn:
       - domain.com
-      - www.domain.com

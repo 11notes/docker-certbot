@@ -29,14 +29,15 @@
     mkdir -p ${APP_ROOT}/log/${NAME}
     rm -f ${APP_ROOT}/log/${NAME}/*
 
-    EXIT=0
+    elevenLogJSON info "${NAME} certificate request starting ..."
+
     CERBOT_CMD="certbot certonly -q --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${YAML_EMAIL} --keep"
     case ${YAML_MODULE} in
       http)
         ${CERBOT_CMD} \
           --http-01-port ${HTTP_PORT:-80} \
           --webroot -w /nginx/www \
-          ${YAML_DOMAINS} > /dev/null &> /dev/null
+          ${YAML_DOMAINS}
       ;;
 
       rfc2136)
@@ -44,7 +45,7 @@
           --dns-rfc2136 \
           --dns-rfc2136-credentials ${RFC2136_CREDENTIALS:-"${APP_ROOT}/etc/dns.ini"} \
           --dns-rfc2136-propagation-seconds ${RFC2136_PROPAGATION_SECONDS:-60} \
-          ${YAML_DOMAINS} > /dev/null &> /dev/null
+          ${YAML_DOMAINS}
       ;;
     esac
     EXIT=$?
@@ -52,16 +53,14 @@
     if [ ${EXIT} == 0 ]; then
       elevenLogJSON info "${NAME} with module ${YAML_MODULE} created"
       cert-dir "${NAME}"
-      WEBHOOK_ERROR=false
     else
-      elevenLogJSON error "${NAME} with module ${YAML_MODULE} failed"
-      WEBHOOK_ERROR=true
+      elevenLogJSON error "${NAME} with module ${YAML_MODULE} failed!"
     fi
 
-    if [ ! ${YAML_WEBHOOK} == "null" ]; then
+    if [ ${EXIT} == 0 ] && [ ! ${YAML_WEBHOOK} == "null" ]; then
       if [ -f "${APP_ROOT}/var/${NAME}/${NAME}.crt" ]; then
         echo '{}' | jq \
-          --arg error ${WEBHOOK_ERROR} \
+          --arg error ${EXIT} \
           --arg name ${NAME} \
           --argjson domain ${WEBHOOK_DOMAINS} \
           --arg crt "$(cat ${APP_ROOT}/var/${NAME}/${NAME}.crt)" \
@@ -73,7 +72,7 @@
       fi
     fi
 
-    if [ ! ${YAML_SCRIPT} == "null" ] && [ -f "${YAML_SCRIPT}" ]; then
+    if [ ${EXIT} == 0 ] && [ ! ${YAML_SCRIPT} == "null" ] && [ -f "${YAML_SCRIPT}" ]; then
       elevenLogJSON info "calling script ${YAML_SCRIPT} for ${NAME}"
       . ${YAML_SCRIPT} "${NAME}"
     fi

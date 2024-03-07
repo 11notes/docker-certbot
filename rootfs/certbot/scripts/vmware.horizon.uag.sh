@@ -10,14 +10,19 @@
   ROOT=${APP_ROOT}/var/${1}
   SCRIPT=${PWD}/$(basename "$0")
 
-  echo '{}' | jq \
-    --arg privateKeyPem "$(cat ${ROOT}/${1}.key)" \
-    --arg certChainPem "$(cat ${ROOT}/${1}.crt)" \
-  '{"privateKeyPem": $privateKeyPem, "certChainPem": $certChainPem}' > ${ROOT}/${1}.json
+  openssl x509 -noout -text -in ${ROOT}/${1}.crt | grep -q "ecPublicKey"
+  if [ $? == 1 ]; then
+    echo '{}' | jq \
+      --arg privateKeyPem "$(cat ${ROOT}/${1}.key)" \
+      --arg certChainPem "$(cat ${ROOT}/${1}.crt)" \
+    '{"privateKeyPem": $privateKeyPem, "certChainPem": $certChainPem}' > ${ROOT}/${1}.json
 
-  for IP in ${HORIZON_VIEW_UAG_NODES}; do
-    curl -i -s -o /dev/null -w "%{http_code}" -X PUT --insecure --max-time 5 --user ${HORIZON_VIEW_UAG_USER}:${HORIZON_VIEW_UAG_PASSWORD} -H 'Content-Type: application/json' https://${IP}:9443/rest/v1/config/certs/ssl -d @${ROOT}/${1}.json | grep -q '200'
-    if [ ! $? == 0 ]; then
-      elevenLogJSON error "script \"${SCRIPT}\" filed to update Unified Access Gateway [${IP}]"
-    fi
-  done
+    for IP in ${HORIZON_VIEW_UAG_NODES}; do
+      curl -i -s -o /dev/null -w "%{http_code}" -X PUT --insecure --max-time 5 --user ${HORIZON_VIEW_UAG_USER}:${HORIZON_VIEW_UAG_PASSWORD} -H 'Content-Type: application/json' https://${IP}:9443/rest/v1/config/certs/ssl -d @${ROOT}/${1}.json | grep -q '200'
+      if [ ! $? == 0 ]; then
+        elevenLogJSON error "script \"${SCRIPT}\" failed to update Unified Access Gateway [${IP}]!"
+      fi
+    done
+  else
+    elevenLogJSON error "script \"${SCRIPT}\" can't be used on ecdsa certificates, make sure you have selected key:rsa for Horizon View Unified Access Gateway!"
+  fi
