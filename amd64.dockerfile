@@ -21,6 +21,7 @@
       mkdir -p ${APP_ROOT}/etc; \
       mkdir -p ${APP_ROOT}/var; \
       mkdir -p ${APP_ROOT}/lib; \
+      mkdir -p ${APP_ROOT}/scripts; \
       mkdir -p ${APP_ROOT}/log;
 
   # :: install application
@@ -49,7 +50,7 @@
         ${APP_ROOT};
 
 # :: Volumes
-  VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var"]
+  VOLUME ["${APP_ROOT}/etc", "${APP_ROOT}/var", "${APP_ROOT}/scripts"]
 
 # :: Monitor
   HEALTHCHECK CMD /usr/local/bin/healthcheck.sh || exit 1

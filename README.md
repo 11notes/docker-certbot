@@ -13,6 +13,7 @@ Why use this image at all and not simply use Certbot with Traefik? Simple answer
 # VOLUMES
 * **/certbot/etc** - Directory of config.yaml and dns.ini
 * **/certbot/var** - Directory of all certs
+* **/certbot/scripts** - Directory of all your and default scripts
 
 # RUN
 ```shell
@@ -20,6 +21,7 @@ docker run --name certbot \
   -p 8080:8080/tcp \
   -v .../etc:/certbot/etc \
   -v .../var:/certbot/var \
+  -v .../scripts:/certbot/scripts \
   -d 11notes/certbot:[tag]
 ```
 
@@ -54,8 +56,16 @@ certificates:
 
   - name: "com.domain.webhook"
     email: "info@domain.com"
-    # use webhook
-    webhook: true
+    # call webhook
+    webhook: https://domain.com/certbot
+    fqdn:
+      - domain.com
+      - www.domain.com
+
+  - name: "com.domain.webhook"
+    email: "info@domain.com"
+    # call script
+    script: /certbot/scripts/vmware.horizon.uag.sh
     fqdn:
       - domain.com
       - www.domain.com
@@ -80,7 +90,6 @@ Traefik redirect HTTP:80 to certbot container:
 | `TZ` | [Time Zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) | |
 | `DEBUG` | Show debug information | |
 | `KEY_TYPE` | set key type (RSA or ECDSA) | ECDSA |
-| `WEBHOOK_URL` | webhook to call if `webhook: true` is set |  |
 
 # AVAILABLE MODULES
 | Module | Parameter | Description | Default |

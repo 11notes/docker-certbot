@@ -11,8 +11,8 @@
     YAML_KEY=$(yq '.certificates['${i}'].key' ${YAML})
     YAML_MODULE=$(yq '.certificates['${i}'].module' ${YAML})
     YAML_WEBHOOK=$(yq '.certificates['${i}'].webhook' ${YAML})
+    YAML_SCRIPT=$(yq '.certificates['${i}'].script' ${YAML})
     if [ ${YAML_MODULE} == "null" ]; then YAML_MODULE="http"; fi
-    if [ ${YAML_WEBHOOK} == "null" ]; then YAML_WEBHOOK="false"; fi
 
     while read fqdn; do
       YAML_DOMAIN=$(yq '.certificates['${i}'].fqdn['${j}']' ${YAML})
@@ -58,7 +58,7 @@
       WEBHOOK_ERROR=true
     fi
 
-    if [ ! -z "${WEBHOOK_URL}" ] && [ ${YAML_WEBHOOK} == "true" ]; then
+    if [ ! ${YAML_WEBHOOK} == "null" ]; then
       if [ -f "${APP_ROOT}/var/${NAME}/${NAME}.crt" ]; then
         echo '{}' | jq \
           --arg error ${WEBHOOK_ERROR} \
@@ -67,9 +67,15 @@
           --arg crt "$(cat ${APP_ROOT}/var/${NAME}/${NAME}.crt)" \
           --arg key "$(cat ${APP_ROOT}/var/${NAME}/${NAME}.key)" \
         '{"error": $error, "name": $name, "domain": [$domain], "crt": $crt, "key": $key}' > ${APP_ROOT}/etc/live/${name}/data.json
-
-        curl --max-time 5 -H "Content-Type: application/json" -X PUT -d @${APP_ROOT}/etc/live/${name}/data.json ${WEBHOOK_URL} &> /dev/null
+        
+        elevenLogJSON info "calling webhook ${YAML_WEBHOOK} for ${NAME}"
+        curl --max-time 5 -H "Content-Type: application/json" -X PUT -d @${APP_ROOT}/etc/live/${name}/data.json ${YAML_WEBHOOK} &> /dev/null
       fi
+    fi
+
+    if [ ! ${YAML_SCRIPT} == "null" ] && [ -f "${YAML_SCRIPT}" ]; then
+      elevenLogJSON info "calling script ${YAML_SCRIPT} for ${NAME}"
+      . ${YAML_SCRIPT} "${NAME}"
     fi
 
     i=$((${i}+1))    

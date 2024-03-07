@@ -26,8 +26,16 @@ certificates:
 
   - name: "com.domain.webhook"
     email: "info@domain.com"
-    # use webhook
-    webhook: true
+    # call webhook
+    webhook: https://domain.com/certbot
+    fqdn:
+      - domain.com
+      - www.domain.com
+
+  - name: "com.domain.webhook"
+    email: "info@domain.com"
+    # call script
+    script: /certbot/scripts/vmware.horizon.uag.sh
     fqdn:
       - domain.com
       - www.domain.com
