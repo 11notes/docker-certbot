@@ -29,9 +29,7 @@
     mkdir -p ${APP_ROOT}/log/${NAME}
     rm -f ${APP_ROOT}/log/${NAME}/*
 
-    elevenLogJSON info "${NAME} certificate request starting ..."
-
-    CERBOT_CMD="certbot certonly -q --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${YAML_EMAIL} --keep"
+    CERBOT_CMD="certbot certonly -q --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --new-key --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${YAML_EMAIL} --keep"
     case ${YAML_MODULE} in
       http)
         ${CERBOT_CMD} \
@@ -51,10 +49,10 @@
     EXIT=$?
    
     if [ ${EXIT} == 0 ]; then
-      elevenLogJSON info "${NAME} with module ${YAML_MODULE} created"
+      elevenLogJSON info "[${NAME}] with module ${YAML_MODULE} created"
       cert-dir "${NAME}"
     else
-      elevenLogJSON error "${NAME} with module ${YAML_MODULE} failed!"
+      elevenLogJSON error "[${NAME}] with module ${YAML_MODULE} failed!"
     fi
 
     if [ ${EXIT} == 0 ] && [ ! ${YAML_WEBHOOK} == "null" ]; then
@@ -67,13 +65,13 @@
           --arg key "$(cat ${APP_ROOT}/var/${NAME}/${NAME}.key)" \
         '{"error": $error, "name": $name, "domain": [$domain], "crt": $crt, "key": $key}' > ${APP_ROOT}/etc/live/${name}/data.json
         
-        elevenLogJSON info "calling webhook ${YAML_WEBHOOK} for ${NAME}"
+        elevenLogJSON info "[${YAML_WEBHOOK}] ${NAME}"
         curl --max-time 5 -H "Content-Type: application/json" -X PUT -d @${APP_ROOT}/etc/live/${name}/data.json ${YAML_WEBHOOK} &> /dev/null
       fi
     fi
 
     if [ ${EXIT} == 0 ] && [ ! ${YAML_SCRIPT} == "null" ] && [ -f "${YAML_SCRIPT}" ]; then
-      elevenLogJSON info "calling script ${YAML_SCRIPT} for ${NAME}"
+      elevenLogJSON info "[${YAML_SCRIPT}] ${NAME}"
       . ${YAML_SCRIPT} "${NAME}"
     fi
 
