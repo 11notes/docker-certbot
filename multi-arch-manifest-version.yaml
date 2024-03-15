@@ -1,0 +1,11 @@
+image: 11notes/certbot:2.7.4"
+manifests:
+  - image: 11notes/certbot:2.7.4"
+    platform:
+      architecture: amd64
+      os: linux
+  - image: 11notes/certbot:2.7.4"
+    platform:
+      architecture: arm64
+      os: linux
+      variant: v8
