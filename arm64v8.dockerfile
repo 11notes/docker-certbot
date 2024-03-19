@@ -30,6 +30,9 @@
 
   # :: install application
     RUN set -ex; \
+      apk --no-cache --virtual .build add \
+        gcc \
+        python3-dev; \
       apk --no-cache add \
         gcc \
         curl \
@@ -41,7 +44,8 @@
         py3-pip \
         python3=3.11.8-r0; \
       pip3 install -t /usr/lib/python3.11/site-packages --upgrade certbot-dns-rfc2136; \
-      apk --no-cache upgrade;
+      apk --no-cache upgrade; \
+      apk del .build;
 
   # :: copy root filesystem changes and add execution rights to init scripts
     COPY ./rootfs /
