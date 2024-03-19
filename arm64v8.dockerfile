@@ -31,6 +31,7 @@
   # :: install application
     RUN set -ex; \
       apk --no-cache add \
+        gcc \
         curl \
         jq \
         yq \
