@@ -12,6 +12,7 @@ Why use this image at all and not simply use Certbot with Traefik? Simple answer
 
 # 3RD PARTY SYSTEMS SUPPORTED
 * **Horizon View Unified Access Gateway**
+* **Traefik Dynamic Configuration**
 
 # VOLUMES
 * **/certbot/etc** - Directory of config.yaml and dns.ini
