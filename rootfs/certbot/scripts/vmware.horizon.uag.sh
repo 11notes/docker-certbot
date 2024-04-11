@@ -13,9 +13,9 @@
 
   openssl x509 -noout -text -in ${ROOT}/${1}.crt | grep -q "ecPublicKey"
   if [ $? == 1 ]; then
-    END=$(echo -n Q | openssl s_client -connect ${HORIZON_VIEW_FQDN}:443 2>/dev/null | openssl x509 -enddate -noout -checkend 3)
+    END=$(echo -n Q | openssl s_client -connect ${HORIZON_VIEW_FQDN}:443 2>/dev/null | openssl x509 -enddate -noout -checkend 7)
     if echo ${END} | grep -q 'will expire'; then
-      echo "certificate will expire in the next three days, replacing ..."
+      echo "certificate will expire in the next seven days, replacing ..."
       echo '{}' | jq \
         --arg privateKeyPem "$(cat ${ROOT}/${1}.key)" \
         --arg certChainPem "$(cat ${ROOT}/${1}.crt)" \
@@ -30,7 +30,7 @@
         fi
       done
     else
-      echo "no updated of certificate needed, does not expire in the next three days"
+      echo "no updated of certificate needed, does not expire in the next seven days"
     fi
   else
     echo "can't be used on ecdsa certificates, make sure you have selected key:rsa for Horizon View Unified Access Gateway!"

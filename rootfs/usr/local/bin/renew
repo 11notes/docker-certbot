@@ -71,7 +71,6 @@
     fi
 
     if [ ${EXIT} == 0 ] && [ ! ${YAML_SCRIPT} == "null" ] && [ -f "${YAML_SCRIPT}" ]; then
-      elevenLogJSON info "[${YAML_SCRIPT}] ${NAME}"
       SCRIPT_RETURN=$(ash ${YAML_SCRIPT} "${NAME}")
       elevenLogJSON info "[${YAML_SCRIPT}] ${SCRIPT_RETURN}"
     fi

@@ -19,7 +19,7 @@
   # remove expired certificates and add valid ones
   I_ADD=0
   for CRT in ${TRAEFIK_DYNAMIC_ROOT}/*.crt; do
-    NAME=$(echo ${CRT} | sed "s#${TRAEFIK_DYNAMIC_ROOT}/##")
+    NAME=$(echo ${CRT} | sed -E "s#${TRAEFIK_DYNAMIC_ROOT}/##" | sed -E "s/.crt//")
     if [ -f "${CRT}" ]; then
       END=$(openssl x509 -enddate -noout -in "${CRT}" -checkend 0)
       if echo ${END} | grep -q 'will expire'; then
@@ -34,4 +34,3 @@
 
   # write dynamic configuration file
   echo "${YAML}" > ${TRAEFIK_DYNAMIC_ROOT}/${TRAEFIK_DYNAMIC_NAME}
-  echo "added ${I_ADD} certificate(s) to ${TRAEFIK_DYNAMIC_ROOT}/${TRAEFIK_DYNAMIC_NAME}"
