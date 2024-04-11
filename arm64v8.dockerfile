@@ -34,6 +34,7 @@
         gcc \
         build-base \
         linux-headers \
+        libffi-dev \
         python3-dev; \
       apk --no-cache add \
         gcc \
