@@ -32,6 +32,8 @@
     RUN set -ex; \
       apk --no-cache --virtual .build add \
         gcc \
+        build-base \
+        linux-headers \
         python3-dev; \
       apk --no-cache add \
         gcc \
