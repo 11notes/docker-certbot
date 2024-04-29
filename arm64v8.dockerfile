@@ -45,7 +45,7 @@
         openssl \
         certbot=${APP_VERSION} \
         py3-pip \
-        python3=3.11.8-r0; \
+        python3; \
       pip3 install -t /usr/lib/python3.11/site-packages --upgrade certbot-dns-rfc2136; \
       apk --no-cache upgrade; \
       apk del .build;
