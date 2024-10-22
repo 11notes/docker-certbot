@@ -1,8 +1,22 @@
 name: "certbot"
 services:
+  chown:
+    image: "11notes/alpine:stable"
+    user: "root"
+    environment:
+      TZ: "Europe/Zurich"
+    volumes:
+      - "certbot.etc:/chown/certbot.etc"
+      - "certbot.var:/chown/certbot.var"
+      - "traefik.var:/chown/traefik.var"
+      - "traefik.var.ssl:/chown/traefik.var.ssl"
+    command: "chown -R 1000:1000 /chown"
   certbot:
     image: "11notes/certbot:2.11.0"
     container_name: "certbot"
+    depends_on:
+      chown:
+        condition: service_completed_successfully
     environment:
       TZ: "Europe/Zurich"
       CERTBOT_TRAEFIK_DIRECTORY: "/certbot/traefik"
@@ -16,6 +30,9 @@ services:
   traefik:
     image: "11notes/traefik:3.1.0"
     container_name: "traefik"
+    depends_on:
+      chown:
+        condition: service_completed_successfully
     environment:
       TZ: "Europe/Zurich"
     command:

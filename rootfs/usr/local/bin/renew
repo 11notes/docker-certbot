@@ -30,62 +30,55 @@
     rm -f ${APP_ROOT}/log/${NAME}/*
 
     CERBOT_CMD="certbot certonly -q --no-eff-email --key-type ${CERTBOT_KEY_TYPE} --rsa-key-size 4096 --new-key --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${YAML_EMAIL} --keep"
-    case ${YAML_MODULE} in
-      http)
-        ${CERBOT_CMD} \
-          --http-01-port ${HTTP_PORT:-80} \
-          --webroot -w /nginx/www \
-          ${YAML_DOMAINS}
-      ;;
 
-      rfc2136)
-        if [ -z ${CERTBOT_RFC2136_SERVER} ]; then
-          if echo "${YAML_MODULE}" | grep -q "server"; then
-            CERTBOT_RFC2136_SERVER=$(yq '.certificates['${i}'].module.rfc2136.server' ${YAML})
-            CERTBOT_RFC2136_PORT=$(yq '.certificates['${i}'].module.rfc2136.port' ${YAML})
-            CERTBOT_RFC2136_NAME=$(yq '.certificates['${i}'].module.rfc2136.name' ${YAML})
-            CERTBOT_RFC2136_SECRET=$(yq '.certificates['${i}'].module.rfc2136.secret' ${YAML})
-            CERTBOT_RFC2136_ALGORITHM=$(yq '.certificates['${i}'].module.rfc2136.algorithm' ${YAML})
-            CERTBOT_RFC2136_PROPAGATION_SECONDS=$(yq '.certificates['${i}'].module.rfc2136.propagation_seconds' ${YAML})
-          fi
-          if echo "${YAML_MODULE}" | grep -q "credentials"; then
-            CERTBOT_RFC2136_CREDENTIALS=$(yq '.certificates['${i}'].module.rfc2136.credentials' ${YAML})
-          fi
+    if echo "${YAML_MODULE}" | grep -q "rfc2136"; then
+      if [ -z ${CERTBOT_RFC2136_SERVER} ]; then
+        if echo "${YAML_MODULE}" | grep -q "server"; then
+          CERTBOT_RFC2136_SERVER=$(yq '.certificates['${i}'].module.rfc2136.server' ${YAML})
+          CERTBOT_RFC2136_PORT=$(yq '.certificates['${i}'].module.rfc2136.port' ${YAML})
+          CERTBOT_RFC2136_NAME=$(yq '.certificates['${i}'].module.rfc2136.name' ${YAML})
+          CERTBOT_RFC2136_SECRET=$(yq '.certificates['${i}'].module.rfc2136.secret' ${YAML})
+          CERTBOT_RFC2136_ALGORITHM=$(yq '.certificates['${i}'].module.rfc2136.algorithm' ${YAML})
+          CERTBOT_RFC2136_PROPAGATION_SECONDS=$(yq '.certificates['${i}'].module.rfc2136.propagation_seconds' ${YAML})
         fi
-
-        if [ ! -z ${CERTBOT_RFC2136_SERVER} ]; then
-          CERTBOT_RFC2136_CREDENTIALS=${APP_ROOT}/tmp/$(date -u +"%Y%m%dT%H%M%S").ini
-          echo -e "dns_rfc2136_server = ${CERTBOT_RFC2136_SERVER}\n\
-dns_rfc2136_port = ${CERTBOT_RFC2136_PORT}\n\
-dns_rfc2136_name = ${CERTBOT_RFC2136_NAME}\n\
-dns_rfc2136_secret = ${CERTBOT_RFC2136_SECRET}\n\
-dns_rfc2136_algorithm = ${CERTBOT_RFC2136_ALGORITHM}\n\
-dns_rfc2136_sign_query = false" > ${CERTBOT_RFC2136_CREDENTIALS}
+        if echo "${YAML_MODULE}" | grep -q "credentials"; then
+          CERTBOT_RFC2136_CREDENTIALS=$(yq '.certificates['${i}'].module.rfc2136.credentials' ${YAML})
         fi
+      fi
 
-        ${CERBOT_CMD} \
-          --dns-rfc2136 \
-          --dns-rfc2136-credentials ${CERTBOT_RFC2136_CREDENTIALS:-"${APP_ROOT}/etc/rfc2136.ini"} \
-          --dns-rfc2136-propagation-seconds ${CERTBOT_RFC2136_PROPAGATION_SECONDS:-60} \
-          ${YAML_DOMAINS}
-      ;;
+      if [ ! -z ${CERTBOT_RFC2136_SERVER} ]; then
+        CERTBOT_RFC2136_CREDENTIALS=${APP_ROOT}/tmp/$(date -u +"%Y%m%dT%H%M%S").ini
+        cp ${APP_ROOT}/.rfc2136.credentials.tpl ${CERTBOT_RFC2136_CREDENTIALS}
+        sed -i 's/{IP}/'${CERTBOT_RFC2136_SERVER}'/' ${CERTBOT_RFC2136_CREDENTIALS}
+        sed -i 's/{PORT}/'${CERTBOT_RFC2136_PORT}'/' ${CERTBOT_RFC2136_CREDENTIALS}
+        sed -i 's/{NAME}/'${CERTBOT_RFC2136_NAME}'/' ${CERTBOT_RFC2136_CREDENTIALS}
+        sed -i 's/{SECRET}/'${CERTBOT_RFC2136_SECRET}'/' ${CERTBOT_RFC2136_CREDENTIALS}
+        sed -i 's/{ALGORITHM}/'${CERTBOT_RFC2136_ALGORITHM}'/' ${CERTBOT_RFC2136_CREDENTIALS}
+      fi
 
-      rfc2136-cname)
-        ${CERBOT_CMD} \
-          --manual \
-          --preferred-challenges=dns \
-          --manual-auth-hook= \
-          --manual-cleanup-hook= \
-          ${YAML_DOMAINS}
-      ;;
-    esac
+      elevenLogJSON info "[${NAME}] request for module: rfc2136, propagation: ${CERTBOT_RFC2136_PROPAGATION_SECONDS:-60}s, ini: ${CERTBOT_RFC2136_CREDENTIALS:-"${APP_ROOT}/etc/rfc2136.ini"}"
+
+      ${CERBOT_CMD} \
+        --dns-rfc2136 \
+        --dns-rfc2136-credentials ${CERTBOT_RFC2136_CREDENTIALS:-"${APP_ROOT}/etc/rfc2136.ini"} \
+        --dns-rfc2136-propagation-seconds ${CERTBOT_RFC2136_PROPAGATION_SECONDS:-60} \
+        ${YAML_DOMAINS}
+    elif echo "${YAML_MODULE}" | grep -q "http"; then
+      elevenLogJSON info "[${NAME}] request for module: http"
+
+      ${CERBOT_CMD} \
+        --http-01-port ${HTTP_PORT:-80} \
+        --webroot -w /nginx/var \
+        ${YAML_DOMAINS}
+    fi
+
     EXIT=$?
    
     if [ ${EXIT} == 0 ]; then
-      elevenLogJSON info "[${NAME}] with module ${YAML_MODULE} created"
+      elevenLogJSON info "[${NAME}] created"
       ash /usr/local/bin/certbot-dir "${NAME}"
     else
-      elevenLogJSON error "[${NAME}] with module ${YAML_MODULE} failed!"
+      elevenLogJSON error "[${NAME}] failed!"
     fi
 
     if [ ${EXIT} == 0 ] && [ ! ${YAML_WEBHOOK} == "null" ]; then

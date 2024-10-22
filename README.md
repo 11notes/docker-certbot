@@ -96,16 +96,15 @@ Traefik redirect HTTP:80 to certbot container:
 | `TZ` | [Time Zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) | |
 | `DEBUG` | Show debug information | |
 | `CERTBOT_CONFIG` | environment variable containing the entire config as yaml |  |
-| `CERTBOT_KEY_TYPE` | set key type (RSA or ECDSA) | ECDSA |
+| `CERTBOT_KEY_TYPE` | set global key type (RSA or ECDSA) | ECDSA |
 | `CERTBOT_TRAEFIK_DIRECTORY` | directory to create certificate structure for Traefik (ie /certbot/traefik) |  |
 | `CERTBOT_TRAEFIK_RELATIVE_PATH` | realtive path to use in certbot.yaml (ie /traefik/var/ssl) |  |
 
 # AVAILABLE MODULES
 | Module | Parameter | Description | Default |
 | --- | --- | --- | --- |
-| `http` | HTTP_PORT | port used for HTTP challenge | 80 |
-| `rfc2136` | CERTBOT_RFC2136_PROPAGATION_SECONDS | time in seconds to wait for DNS propagation | 60 |
-| `rfc2136` | CERTBOT_RFC2136_CREDENTIALS | path to dns.ini | /certbot/etc/rfc2136.ini |
+| `rfc2136` | CERTBOT_RFC2136_PROPAGATION_SECONDS | time in seconds to wait for global DNS propagation | 60 |
+| `rfc2136` | CERTBOT_RFC2136_CREDENTIALS | path to global dns.ini | /certbot/etc/rfc2136.ini |
 
 # SOURCE
 * [11notes/certbot:2.11.0](https://github.com/11notes/docker-certbot/tree/2.11.0)
