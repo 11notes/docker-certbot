@@ -12,7 +12,7 @@
     YAML_MODULE=$(yq '.certificates['${i}'].module' ${YAML})
     YAML_WEBHOOK=$(yq '.certificates['${i}'].webhook' ${YAML})
     YAML_SCRIPT=$(yq '.certificates['${i}'].script' ${YAML})
-    if [ ${YAML_MODULE} == "null" ]; then YAML_MODULE="http"; fi
+    if [ "${YAML_MODULE}" == "null" ]; then YAML_MODULE="http"; fi
 
     while read fqdn; do
       YAML_DOMAIN=$(yq '.certificates['${i}'].fqdn['${j}']' ${YAML})
@@ -23,13 +23,13 @@
 
     WEBHOOK_DOMAINS=$(echo ${WEBHOOK_DOMAINS} | cut -c2-)
 
-    KEY_TYPE=${KEY_TYPE:-ecdsa}
-    if [ ${YAML_KEY} == "rsa" ]; then KEY_TYPE="${YAML_KEY}"; fi
+    CERTBOT_KEY_TYPE=${CERTBOT_KEY_TYPE:-ecdsa}
+    if [ "${YAML_KEY}" == "rsa" ]; then CERTBOT_KEY_TYPE="${YAML_KEY}"; fi
 
     mkdir -p ${APP_ROOT}/log/${NAME}
     rm -f ${APP_ROOT}/log/${NAME}/*
 
-    CERBOT_CMD="certbot certonly -q --no-eff-email --key-type ${KEY_TYPE} --rsa-key-size 4096 --new-key --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${YAML_EMAIL} --keep"
+    CERBOT_CMD="certbot certonly -q --no-eff-email --key-type ${CERTBOT_KEY_TYPE} --rsa-key-size 4096 --new-key --config-dir ${APP_ROOT}/etc --work-dir ${APP_ROOT}/lib --logs-dir ${APP_ROOT}/log/${NAME} --cert-name ${NAME} --non-interactive --agree-tos --email ${YAML_EMAIL} --keep"
     case ${YAML_MODULE} in
       http)
         ${CERBOT_CMD} \
@@ -39,10 +39,43 @@
       ;;
 
       rfc2136)
+        if [ -z ${CERTBOT_RFC2136_SERVER} ]; then
+          if echo "${YAML_MODULE}" | grep -q "server"; then
+            CERTBOT_RFC2136_SERVER=$(yq '.certificates['${i}'].module.rfc2136.server' ${YAML})
+            CERTBOT_RFC2136_PORT=$(yq '.certificates['${i}'].module.rfc2136.port' ${YAML})
+            CERTBOT_RFC2136_NAME=$(yq '.certificates['${i}'].module.rfc2136.name' ${YAML})
+            CERTBOT_RFC2136_SECRET=$(yq '.certificates['${i}'].module.rfc2136.secret' ${YAML})
+            CERTBOT_RFC2136_ALGORITHM=$(yq '.certificates['${i}'].module.rfc2136.algorithm' ${YAML})
+            CERTBOT_RFC2136_PROPAGATION_SECONDS=$(yq '.certificates['${i}'].module.rfc2136.propagation_seconds' ${YAML})
+          fi
+          if echo "${YAML_MODULE}" | grep -q "credentials"; then
+            CERTBOT_RFC2136_CREDENTIALS=$(yq '.certificates['${i}'].module.rfc2136.credentials' ${YAML})
+          fi
+        fi
+
+        if [ ! -z ${CERTBOT_RFC2136_SERVER} ]; then
+          CERTBOT_RFC2136_CREDENTIALS=${APP_ROOT}/tmp/$(date -u +"%Y%m%dT%H%M%S").ini
+          echo -e "dns_rfc2136_server = ${CERTBOT_RFC2136_SERVER}\n\
+dns_rfc2136_port = ${CERTBOT_RFC2136_PORT}\n\
+dns_rfc2136_name = ${CERTBOT_RFC2136_NAME}\n\
+dns_rfc2136_secret = ${CERTBOT_RFC2136_SECRET}\n\
+dns_rfc2136_algorithm = ${CERTBOT_RFC2136_ALGORITHM}\n\
+dns_rfc2136_sign_query = false" > ${CERTBOT_RFC2136_CREDENTIALS}
+        fi
+
         ${CERBOT_CMD} \
           --dns-rfc2136 \
-          --dns-rfc2136-credentials ${RFC2136_CREDENTIALS:-"${APP_ROOT}/etc/dns.ini"} \
-          --dns-rfc2136-propagation-seconds ${RFC2136_PROPAGATION_SECONDS:-60} \
+          --dns-rfc2136-credentials ${CERTBOT_RFC2136_CREDENTIALS:-"${APP_ROOT}/etc/rfc2136.ini"} \
+          --dns-rfc2136-propagation-seconds ${CERTBOT_RFC2136_PROPAGATION_SECONDS:-60} \
+          ${YAML_DOMAINS}
+      ;;
+
+      rfc2136-cname)
+        ${CERBOT_CMD} \
+          --manual \
+          --preferred-challenges=dns \
+          --manual-auth-hook= \
+          --manual-cleanup-hook= \
           ${YAML_DOMAINS}
       ;;
     esac
@@ -50,7 +83,7 @@
    
     if [ ${EXIT} == 0 ]; then
       elevenLogJSON info "[${NAME}] with module ${YAML_MODULE} created"
-      ash /usr/local/bin/cert-dir "${NAME}"
+      ash /usr/local/bin/certbot-dir "${NAME}"
     else
       elevenLogJSON error "[${NAME}] with module ${YAML_MODULE} failed!"
     fi
@@ -63,10 +96,10 @@
           --argjson domain ${WEBHOOK_DOMAINS} \
           --arg crt "$(cat ${APP_ROOT}/var/${NAME}/${NAME}.crt)" \
           --arg key "$(cat ${APP_ROOT}/var/${NAME}/${NAME}.key)" \
-        '{"error": $error, "name": $name, "domain": [$domain], "crt": $crt, "key": $key}' > ${APP_ROOT}/etc/live/${name}/data.json
+        '{"error": $error, "name": $name, "domain": [$domain], "crt": $crt, "key": $key}' > ${APP_ROOT}/tmp/${NAME}.json
         
         elevenLogJSON info "[${YAML_WEBHOOK}] ${NAME}"
-        curl --max-time 5 -H "Content-Type: application/json" -X PUT -d @${APP_ROOT}/etc/live/${name}/data.json ${YAML_WEBHOOK} &> /dev/null
+        curl --max-time 5 -H "Content-Type: application/json" -X PUT -d @${APP_ROOT}/tmp/${NAME}.json ${YAML_WEBHOOK} &> /dev/null
       fi
     fi
 
@@ -78,4 +111,4 @@
     i=$((${i}+1))    
   done < <(yq '.certificates[].name' ${YAML})
 
-  cert-cleanup
+  certbot-cleanup

@@ -1,0 +1,46 @@
+name: "certbot"
+services:
+  certbot:
+    image: "11notes/certbot:2.11.0"
+    container_name: "certbot"
+    environment:
+      TZ: "Europe/Zurich"
+      CERTBOT_TRAEFIK_DIRECTORY: "/certbot/traefik"
+      CERTBOT_TRAEFIK_RELATIVE_PATH: "/traefik/var/ssl"
+    volumes:
+      - "certbot.etc:/certbot/etc"
+      - "certbot.var:/certbot/var"
+      - "traefik.var.ssl:/certbot/traefik"
+    restart: "always"
+
+  traefik:
+    image: "11notes/traefik:3.1.0"
+    container_name: "traefik"
+    environment:
+      TZ: "Europe/Zurich"
+    command:
+      - "--global.checkNewVersion=false"
+      - "--global.sendAnonymousUsage=false"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--log.level=INFO"
+      - "--log.format=json"
+      - "--providers.file.directory=/traefik/var"
+      - "--providers.file.watch=true"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.https.address=:443"
+      - "--serversTransport.insecureSkipVerify=true"
+    volumes:
+      - "traefik.var:/traefik/var"
+      - "traefik.var.ssl:/traefik/var/ssl"
+    ports:
+      - "80:80/tcp"
+      - "443:443/tcp"
+    sysctls:
+      - net.ipv4.ip_unprivileged_port_start=80
+    restart: "always"
+volumes:
+  certbot.etc:
+  certbot.var:
+  traefik.var:
+  traefik.var.ssl:

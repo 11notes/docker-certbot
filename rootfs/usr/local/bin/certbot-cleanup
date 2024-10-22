@@ -1,0 +1,32 @@
+#!/bin/ash
+
+  # remove expired certificates
+  for DIR in ${APP_ROOT}/var/*; do
+    NAME=$(echo ${DIR} | sed "s#${APP_ROOT}/var/##")
+    if [ -f "${DIR}/cert.pem" ]; then
+      END=$(openssl x509 -enddate -noout -in "${DIR}/cert.pem" -checkend 0)
+      if echo ${END} | grep -q 'will expire'; then
+        elevenLogJSON info "certificates of ${NAME} deleted (expired)"
+        rm -rf ${APP_ROOT}/etc/archive/${NAME}
+        rm -rf ${APP_ROOT}/etc/live/${NAME}
+        rm -rf ${APP_ROOT}/var/${NAME}
+        rm -rf ${APP_ROOT}/log/${NAME}
+      fi
+    fi
+  done
+
+  # check if Traefik certificate structure should be generated
+  if [ ! -z ${CERTBOT_TRAEFIK_DIRECTORY} ]; then
+    find ${APP_ROOT}/var -type f -regex '.*\.crt\|.*\.key' -exec cp {} ${CERTBOT_TRAEFIK_DIRECTORY} \;
+
+    YAML=$(echo -e "tls:\n  certificates:")
+    for CRT in ${CERTBOT_TRAEFIK_DIRECTORY}/*.crt; do
+      NAME=$(echo ${CRT} | sed -E "s#${CERTBOT_TRAEFIK_DIRECTORY}/##" | sed -E "s/.crt//")
+      YAML=$(echo -e "${YAML}\n    - certFile: \"${CERTBOT_TRAEFIK_RELATIVE_PATH}/${NAME}.crt\"\n      keyFile: \"${CERTBOT_TRAEFIK_RELATIVE_PATH}/${NAME}.key\"")
+    done
+
+    echo "${YAML}" > ${CERTBOT_TRAEFIK_DIRECTORY}/certbot.yaml
+  fi  
+
+  # remove all files in tmp
+  rm -rf ${APP_ROOT}/tmp/*
